@@ -5,6 +5,7 @@ import argparse
 import json
 import re
 import sys
+import webbrowser
 from pathlib import Path
 
 from pixellogo import __version__
@@ -63,6 +64,8 @@ def build_parser() -> argparse.ArgumentParser:
                      help="画布模式：xhs / 4:3 / og（默认 xhs）")
     out.add_argument("--size", metavar="WxH", help="自定义画布，如 1200x900")
     out.add_argument("--scale", type=int, default=None, metavar="N", help="输出放大倍数（默认 2）")
+    out.add_argument("-f", "--format", choices=["png", "svg", "both"], default=None,
+                     help="输出格式：png / svg / both（默认 both）")
     out.add_argument("-o", "--out", default=None, metavar="PATH", help="输出文件或目录（默认 out/）")
 
     config_group = parser.add_argument_group("配置")
@@ -72,6 +75,8 @@ def build_parser() -> argparse.ArgumentParser:
     config_group.add_argument("--dry-run", action="store_true", help="只打印合并后的配置，不渲染")
 
     misc = parser.add_argument_group("其他")
+    misc.add_argument("--json", action="store_true", help="以 JSON 输出结果，便于脚本消费")
+    misc.add_argument("--open", action="store_true", help="生成后打开第一张图")
     misc.add_argument("--list", choices=["presets", "modes", "fonts"], help="列出可选项后退出")
     return parser
 
@@ -92,11 +97,28 @@ def _cmd_list(kind: str) -> int:
     return 0
 
 
-def _resolve_target(out: str, title: str, mode_key: str) -> Path:
+def _targets(out: str, title: str, mode_key: str, formats: list[str]) -> list[Path]:
+    """按输出目标与格式列表算出落地路径。"""
     path = Path(out)
     if path.suffix.lower() in (".png", ".svg"):
-        return path
-    return path / f"{slugify(title)}-{mode_key.replace(':', 'x')}.png"
+        stem = path.with_suffix("")
+        return [stem.with_suffix("." + fmt) for fmt in formats]
+    name = f"{slugify(title)}-{mode_key.replace(':', 'x')}"
+    return [path / f"{name}.{fmt}" for fmt in formats]
+
+
+def _unique(paths: list[Path], used: set[Path]) -> list[Path]:
+    """批量出图时避免同名覆盖。"""
+    result: list[Path] = []
+    for path in paths:
+        candidate = path
+        index = 2
+        while candidate in used:
+            candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
+            index += 1
+        used.add(candidate)
+        result.append(candidate)
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -119,27 +141,50 @@ def main(argv: list[str] | None = None) -> int:
             if not sep or not key.strip():
                 raise config_mod.ConfigError(f"--set 需要 KEY=VALUE 形式，收到 {item!r}")
             config_mod.set_path(cli_data, key.strip(), config_mod.coerce(value))
-        settings = config_mod.resolve(file_data, cli_data)
+        settings_list = config_mod.resolve_many(file_data, cli_data, forced_out=args.out)
     except (ValueError, OSError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return 2
 
-    for warning in settings.warnings:
-        print(f"{PROG}: 提示：{warning}", file=sys.stderr)
+    for settings in settings_list:
+        for warning in settings.warnings:
+            print(f"{PROG}: 提示：{warning}", file=sys.stderr)
 
     if args.dry_run:
-        print(json.dumps(settings.describe(), ensure_ascii=False, indent=2))
+        payload = (settings_list[0].describe() if len(settings_list) == 1
+                   else [item.describe() for item in settings_list])
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
+    used: set[Path] = set()
+    results: list[dict] = []
     try:
-        scene = build_scene(settings.design)
-        target = _resolve_target(settings.out, settings.design.title, settings.mode_key)
-        save(scene, target, scale=settings.scale)
+        for settings in settings_list:
+            scene = build_scene(settings.design)
+            targets = _unique(_targets(settings.out, settings.design.title,
+                                       settings.mode_key, settings.formats), used)
+            for target in targets:
+                save(scene, target, scale=settings.scale)
+            results.append({
+                "files": [str(target) for target in targets],
+                "mode": settings.mode_key,
+                "width": scene.width * settings.scale,
+                "height": scene.height * settings.scale,
+                "format": settings.formats,
+            })
     except (ValueError, OSError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return 2
 
-    print(f"{target}  ({scene.width * settings.scale}×{scene.height * settings.scale})")
+    if args.open and results and results[0]["files"]:
+        webbrowser.open(Path(results[0]["files"][0]).resolve().as_uri())
+
+    if args.json:
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+    else:
+        for item in results:
+            for file in item["files"]:
+                print(f"{file}  ({item['width']}×{item['height']})")
     return 0
 
 

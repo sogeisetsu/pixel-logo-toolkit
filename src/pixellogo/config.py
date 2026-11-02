@@ -16,7 +16,7 @@ COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 
 TOP_KEYS = {
     "mode", "size", "preset", "title", "subtitle", "desc", "eyebrow", "badge",
-    "colors", "fonts", "layout", "output", "scale", "out",
+    "colors", "fonts", "layout", "output", "scale", "out", "format",
 }
 COLOR_KEYS = {"bg", "fg", "primary", "accent", "shadow"}
 FONT_KEYS = {"title", "sub", "body"}
@@ -43,6 +43,7 @@ class Settings:
     design: Design
     scale: int
     out: str
+    formats: list[str] = field(default_factory=lambda: ["png"])
     merged: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
 
@@ -85,7 +86,7 @@ class Settings:
                 "shadowOffset": design.shadow_offset,
                 "motif": design.motif,
             },
-            "output": {"path": self.out},
+            "output": {"path": self.out, "format": self.formats},
         }
 
 
@@ -196,6 +197,7 @@ def cli_to_config(args) -> dict:
     put("size", args.size)
     put("scale", args.scale)
     put("out", args.out)
+    put("format", getattr(args, "format", None))
 
     colors = {}
     for key, value in (("bg", args.bg), ("fg", args.fg), ("primary", args.primary),
@@ -248,6 +250,31 @@ def _build_mode(merged: dict) -> modes_mod.Mode:
 
 def _build_preset(merged: dict) -> Preset:
     return get_preset(str(merged.get("preset", "terminal")))
+
+
+def _parse_formats(merged: dict) -> list[str]:
+    """把 format 配置规范成按顺序去的格式列表。"""
+    raw = merged.get("format")
+    if raw is None:
+        raw = (merged.get("output") or {}).get("formats")
+    if raw is None:
+        return ["png", "svg"]
+    items = [raw] if isinstance(raw, str) else list(raw) if isinstance(raw, (list, tuple)) else None
+    if items is None:
+        raise ConfigError("format 必须是 png / svg / both，或其数组")
+    result: list[str] = []
+    for item in items:
+        key = str(item).lower()
+        if key == "both":
+            expanded = ["png", "svg"]
+        elif key in ("png", "svg"):
+            expanded = [key]
+        else:
+            raise ConfigError(f"format 只能是 png / svg / both，收到 {item!r}")
+        for fmt in expanded:
+            if fmt not in result:
+                result.append(fmt)
+    return result
 
 
 def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Settings:
@@ -342,4 +369,14 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
         colors=colors,
         font_overrides={key: value for key, value in fonts_cfg.items() if isinstance(value, str)},
     )
-    return Settings(design=design, scale=scale, out=str(out), merged=merged, warnings=warnings)
+    return Settings(design=design, scale=scale, out=str(out), formats=_parse_formats(merged),
+                    merged=merged, warnings=warnings)
+
+
+def resolve_many(file_data, cli_data: dict, forced_out: str | None = None) -> list[Settings]:
+    """配置文件顶层是数组时批量解析，否则等价于单个 ``resolve``。"""
+    if isinstance(file_data, list):
+        if not file_data:
+            raise ConfigError("配置文件是空数组，没有可渲染的内容")
+        return [resolve(item, cli_data, forced_out) for item in file_data]
+    return [resolve(file_data, cli_data, forced_out)]
