@@ -127,6 +127,21 @@ class TestLayout(unittest.TestCase):
         loose = make(subtitle=["ONE", "TWO", "THREE"], desc=["D"], leading=1.5)
         self.assertGreater(ink_height(loose), ink_height(normal))
 
+    def test_bg_pattern_adds_texture(self):
+        plain = make(subtitle=["S"])
+        gridded = make(subtitle=["S"], pattern="grid")
+        self.assertGreater(len(gridded.rects), len(plain.rects))
+        self.assertEqual(len(gridded.colors), len(plain.colors) + 1)
+
+    def test_bg_pattern_stays_inside_canvas(self):
+        for pattern in ("grid", "dots", "scanlines"):
+            scene = make(subtitle=["S"], pattern=pattern)
+            for rect in scene.rects:
+                self.assertGreaterEqual(rect.x, 0, pattern)
+                self.assertGreaterEqual(rect.y, 0, pattern)
+                self.assertLessEqual(rect.x + rect.w, scene.width, pattern)
+                self.assertLessEqual(rect.y + rect.h, scene.height, pattern)
+
     def test_empty_title_rejected(self):
         with self.assertRaises(ValueError):
             make(title="  ")

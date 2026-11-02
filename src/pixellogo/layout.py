@@ -39,6 +39,7 @@ class Design:
     colors: dict[str, str] = field(default_factory=dict)
     font_overrides: dict[str, str] = field(default_factory=dict)
     motif: str = "auto"          # auto | none | blocks
+    pattern: str = "none"        # none | grid | dots | scanlines
 
 
 def _resolve_colors(design: Design) -> dict[str, str]:
@@ -166,6 +167,43 @@ def _draw_badge(scene: Scene, design: Design, palette: dict[str, str], margin: i
     scene.extend(textlib.mask_rects(mask.image, x + pad_x, y + pad_y, palette["bg"]))
 
 
+def _mix(first: str, second: str, ratio: float) -> str:
+    """把两个色值按比例混合成一个新的纯色（不引入透明度）。"""
+    def parts(color: str) -> tuple[int, int, int]:
+        value = color.lstrip("#")
+        if len(value) == 3:
+            value = "".join(char * 2 for char in value)
+        return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))  # type: ignore[return-value]
+
+    left, right = parts(first), parts(second)
+    mixed = [round(a + (b - a) * ratio) for a, b in zip(left, right)]
+    return "#" + "".join(f"{channel:02X}" for channel in mixed)
+
+
+def _draw_pattern(scene: Scene, palette: dict[str, str], pattern: str) -> None:
+    """背景纹理：全部由整数矩形拼成，不引入渐变或半透明。"""
+    if pattern == "none":
+        return
+    color = _mix(palette["bg"], palette["fg"], 0.10)
+    width, height = scene.width, scene.height
+    cell = max(10, round(min(width, height) / 20))
+
+    if pattern == "grid":
+        for x in range(cell, width, cell):
+            scene.add(Rect(x, 0, 1, height, color))
+        for y in range(cell, height, cell):
+            scene.add(Rect(0, y, width, 1, color))
+    elif pattern == "dots":
+        dot = max(2, cell // 9)
+        for x in range(cell, width, cell):
+            for y in range(cell, height, cell):
+                scene.add(Rect(x, y, dot, dot, color))
+    elif pattern == "scanlines":
+        gap = max(4, cell // 4)
+        for y in range(0, height, gap):
+            scene.add(Rect(0, y, width, 1, color))
+
+
 def _draw_motif(scene: Scene, design: Design, palette: dict[str, str],
                 margin: int, content_w: int, text_w: int) -> None:
     """OG 模式右侧的像素阶梯装饰。"""
@@ -193,6 +231,7 @@ def build_scene(design: Design) -> Scene:
     mode = design.mode
     palette = _resolve_colors(design)
     scene = Scene(width=mode.width, height=mode.height, background=palette["bg"])
+    _draw_pattern(scene, palette, design.pattern)
 
     margin = max(6, int(round(min(mode.width, mode.height) * design.margin)))
     content_w = mode.width - margin * 2

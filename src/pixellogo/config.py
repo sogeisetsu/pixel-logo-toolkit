@@ -23,13 +23,14 @@ FONT_KEYS = {"title", "sub", "body"}
 LAYOUT_KEYS = {
     "align", "vertical", "margin", "divider", "dividerWidth",
     "divider-width", "titleSize", "title-size", "motif", "shadowOffset", "shadow-offset",
-    "cjkBold", "cjk-bold", "tracking", "leading", "uppercase",
+    "cjkBold", "cjk-bold", "tracking", "leading", "uppercase", "pattern",
 }
 
 ALIGN_VALUES = {"auto", "left", "center"}
 VERTICAL_VALUES = {"auto", "top", "center"}
 DIVIDER_VALUES = {"auto", "line", "dash", "block", "none"}
 MOTIF_VALUES = {"auto", "none", "blocks"}
+PATTERN_VALUES = {"none", "grid", "dots", "scanlines"}
 
 
 class ConfigError(ValueError):
@@ -237,6 +238,8 @@ def cli_to_config(args) -> dict:
         layout["leading"] = args.leading
     if getattr(args, "uppercase", False):
         layout["uppercase"] = True
+    if getattr(args, "bg_pattern", None):
+        layout["pattern"] = args.bg_pattern
     if layout:
         data["layout"] = layout
 
@@ -322,6 +325,10 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
     if motif not in MOTIF_VALUES:
         raise ConfigError(f"motif 只能是 {'/'.join(sorted(MOTIF_VALUES))}")
 
+    pattern = str(_layout_value(layout_cfg, "pattern") or "none")
+    if pattern not in PATTERN_VALUES:
+        raise ConfigError(f"pattern 只能是 {'/'.join(sorted(PATTERN_VALUES))}")
+
     margin = _layout_value(layout_cfg, "margin")
     if margin is None:
         margin = 0.06
@@ -387,6 +394,7 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
         leading=leading,
         uppercase=uppercase,
         motif=motif,
+        pattern=pattern,
         colors=colors,
         font_overrides={key: value for key, value in fonts_cfg.items() if isinstance(value, str)},
     )

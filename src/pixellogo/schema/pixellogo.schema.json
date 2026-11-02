@@ -75,6 +75,7 @@
         "tracking": { "type": "number", "minimum": 0.5, "maximum": 1.5 },
         "leading": { "type": "number", "minimum": 0.8, "maximum": 2.0 },
         "uppercase": { "type": "boolean" },
+        "pattern": { "enum": ["none", "grid", "dots", "scanlines"] },
         "cjkBold": { "type": "number", "minimum": 0, "maximum": 0.06 }
       }
     },
