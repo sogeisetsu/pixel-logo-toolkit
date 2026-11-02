@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pixellogo"
+version = "0.1.0"
+description = "8-bit / 复古终端风格的像素 Logo 与封面图生成器"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "sogeisetsu", email = "47493432+sogeisetsu@users.noreply.github.com" }]
+keywords = ["pixel-art", "logo", "svg", "png", "cli", "8bit", "og-image"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Terminals",
+]
+dependencies = ["pillow>=9.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/sogeisetsu/pixel-logo-toolkit"
+Issues = "https://github.com/sogeisetsu/pixel-logo-toolkit/issues"
+
+[project.scripts]
+pixellogo = "pixellogo.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pixellogo = [
+    "assets/fonts/*.ttf",
+    "assets/licenses/*.txt",
+    "schema/*.json",
+]

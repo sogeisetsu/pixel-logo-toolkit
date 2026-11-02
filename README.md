@@ -1,54 +1,34 @@
-# 像素风格工具包
+# pixellogo
 
-8-bit / 复古终端美学风格的**完整可复用工具包**：风格规格 + 提示词模板 + 生成器 + 参数采样工具 + 字体 + 成品示例。
+把一段标题 + 副标题 + 说明文字，渲染成 **8-bit / 复古终端风格**的像素图。
+输出支持 PNG 与 SVG，内置小红书封面、4:3 横版、GitHub OG 预览图三种画布。
 
-与参考图的内容无关，只保留风格本身。
-
----
-
-## 快速开始
+## 安装
 
 ```bash
-# 1. 生成成品（输出到 samples/）
-python make_pixellogo.py
-
-# 2. 换文案：编辑 make_pixellogo.py 底部的 CONTENT 列表
-#    {"title": "主标题", "sub": ["副标题"], "foot": ["说明"], "name": "输出名"}
-
-# 3. 从任意参考图反推风格参数
-python tools/analyze.py  <参考图路径>
-python tools/analyze3.py <参考图路径>
+pipx install git+https://github.com/sogeisetsu/pixel-logo-toolkit.git
 ```
 
----
+## 使用
 
-## 目录说明
+```bash
+pixellogo -t "REA" -s "REVERSE ENGINEER" -d "One CLI for agents" -m xhs -o out/
+```
 
-| 路径                  | 内容                                                  |
-| ------------------- | --------------------------------------------------- |
-| `像素风格SVG提示词库.md`    | **主文档** — 风格规格、不变式清单、提示词模板、配色方案                     |
-| `make_pixellogo.py` | 生成器。风格参数区与内容区分离，改 `CONTENT` 即换文案                    |
-| `fonts/`            | 三款像素字体（Press Start 2P / Silkscreen / Pixelify Sans） |
-| `samples/`          | 成品示例：SVG 源文件 + 2x PNG                               |
-| `reference/`        | 风格来源参考图                                             |
-| `tools/`            | 风格参数采样脚本（色板、像素网格、投影、装饰线结构）                          |
-| `analysis/`         | 采样输出的放大图                                            |
+## 文档
 
----
+| 文件 | 内容 |
+| --- | --- |
+| [`docs/style-spec.md`](docs/style-spec.md) | 风格规格、不变式清单、提示词模板、配色方案 |
+| [`docs/design.md`](docs/design.md) | CLI 设计与实现计划 |
 
-## 三步记住这个风格
+## 开发
 
-1. **骨架** — 所有形体由方块像素拼合，斜角呈阶梯状，圆角为 0，坐标全整数，关闭抗锯齿
-2. **填充** — 纯色扁平，无渐变、无滤镜、无纹理、无噪点
-3. **光影** — 右下方向、纯色、硬边、偏移 1 个像素格
+```bash
+PYTHONPATH=src python -m pixellogo --version
+PYTHONPATH=src python -m unittest discover -s tests -v
+```
 
-判定标准只有一条：**放大后每条边缘都必须是阶梯状方块，不能出现平滑曲线或半透明羽化边。**
+## 许可证
 
----
-
-## 自包含说明
-
-- 全部脚本使用**相对自身位置**的路径，整个文件夹可整体复制、压缩、转存到其他机器
-- 字体随包自带，若缺失脚本会自动从 Google Fonts 下载
-- 生成 PNG 依赖 Chrome 或 Edge（脚本自动探测常见安装路径），两者都没有时只产出 SVG
-- 采样脚本可传入任意参考图路径，不传参则使用 `reference/reference_style.png`
+代码以 [MIT](LICENSE) 发布；字体各自遵循 SIL Open Font License 1.1，许可文本见 `src/pixellogo/assets/licenses/`。
