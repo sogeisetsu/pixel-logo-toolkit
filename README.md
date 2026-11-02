@@ -530,7 +530,7 @@ src/pixellogo/
 
 **提示 `pixellogo: command not found`？**
 说明还没安装，只克隆了源码。在仓库目录执行 `pip install .`（或 `pip install -e .` 开发模式、`pipx install .`）后重开终端。
-仍找不到的话，检查 Python 的脚本目录是否在 `PATH` 里：Windows 是 `<Python 安装目录>\\Scripts`，macOS / Linux 通常是 `~/.local/bin`。
+仍找不到的话，检查 Python 的脚本目录是否在 `PATH` 里：Windows 是 `<Python 安装目录>\Scripts`，macOS / Linux 通常是 `~/.local/bin`。
 临时不安装：`PYTHONPATH=src python -m pixellogo -t "REA"`。
 
 **中文出现方块或缺字？**
