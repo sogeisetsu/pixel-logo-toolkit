@@ -88,6 +88,31 @@ class TestLayout(unittest.TestCase):
         self.assertNotEqual(sorted((r.x for r in left.rects))[:5],
                             sorted((r.x for r in center.rects))[:5])
 
+    def test_uppercase_changes_glyphs(self):
+        plain = make(title="abc", subtitle=["sub"])
+        upper = make(title="abc", subtitle=["sub"], uppercase=True)
+        self.assertNotEqual(
+            [(r.x, r.y, r.w, r.h) for r in plain.rects],
+            [(r.x, r.y, r.w, r.h) for r in upper.rects],
+        )
+
+    def test_tracking_tightens_ink_width(self):
+        def ink_width(scene):
+            return max(r.x + r.w for r in scene.rects) - min(r.x for r in scene.rects)
+
+        # 固定字号，避免"标题自动铺满"把字距差异吃掉
+        loose = make(title="PIXEL", title_size=48, tracking=1.0)
+        tight = make(title="PIXEL", title_size=48, tracking=0.8)
+        self.assertLess(ink_width(tight), ink_width(loose))
+
+    def test_leading_increases_block_height(self):
+        def ink_height(scene):
+            return max(r.y + r.h for r in scene.rects) - min(r.y for r in scene.rects)
+
+        normal = make(subtitle=["ONE", "TWO", "THREE"], desc=["D"])
+        loose = make(subtitle=["ONE", "TWO", "THREE"], desc=["D"], leading=1.5)
+        self.assertGreater(ink_height(loose), ink_height(normal))
+
     def test_empty_title_rejected(self):
         with self.assertRaises(ValueError):
             make(title="  ")

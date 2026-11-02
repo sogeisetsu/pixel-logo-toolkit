@@ -33,6 +33,9 @@ class Design:
     divider_ratio: float = 0.42
     title_size: int | None = None
     cjk_bold: float = 0.018
+    tracking: float = 1.0
+    leading: float = 1.0
+    uppercase: bool = False
     colors: dict[str, str] = field(default_factory=dict)
     font_overrides: dict[str, str] = field(default_factory=dict)
     motif: str = "auto"          # auto | none | blocks
@@ -81,7 +84,9 @@ def _fit_title(lines: list[str], chain: list[str], text_w: int, start: int,
     def render(size: int) -> list[textlib.TextMask]:
         masks = []
         for line in lines:
-            mask = textlib.line_mask(line, size, chain, bold_px=_bold_for(line, chain, size, design))
+            mask = textlib.line_mask(line, size, chain,
+                                     bold_px=_bold_for(line, chain, size, design),
+                                     tracking=design.tracking)
             if mask is not None:
                 masks.append(mask)
         return masks
@@ -105,8 +110,9 @@ def _fit_title(lines: list[str], chain: list[str], text_w: int, start: int,
 class _Stack:
     """按基线节奏堆叠文字行，返回每行的相对偏移。"""
 
-    def __init__(self) -> None:
+    def __init__(self, leading: float = 1.0) -> None:
         self.cursor = 0
+        self.leading = leading
         self.items: list[tuple[textlib.TextMask, int, str, str]] = []
 
     def gap(self, px: int) -> None:
@@ -114,7 +120,7 @@ class _Stack:
 
     def line(self, mask: textlib.TextMask, color: str, kind: str) -> None:
         self.items.append((mask, self.cursor, color, kind))
-        self.cursor += mask.line_height
+        self.cursor += max(1, int(round(mask.line_height * self.leading)))
 
 
 def _draw_divider(scene: Scene, x: int, y: int, width: int, thickness: int,
@@ -147,7 +153,7 @@ def _draw_badge(scene: Scene, design: Design, palette: dict[str, str], margin: i
         return
     chain = _body_chain(design)
     size = max(9, int(round(body_size * 0.9)))
-    mask = textlib.line_mask(design.badge, size, chain)
+    mask = textlib.line_mask(design.badge, size, chain, tracking=design.tracking)
     if mask is None:
         return
     pad_x = max(5, int(round(size * 0.55)))
@@ -199,7 +205,10 @@ def build_scene(design: Design) -> Scene:
     sub_chain = _sub_chain(design)
     body_chain = _body_chain(design)
 
-    title_lines = [line.strip() for line in design.title.split("\n") if line.strip()]
+    def prepared(value: str) -> str:
+        return value.upper() if design.uppercase else value
+
+    title_lines = [prepared(line.strip()) for line in design.title.split("\n") if line.strip()]
     if not title_lines:
         raise ValueError("主标题不能为空")
 
@@ -215,14 +224,17 @@ def build_scene(design: Design) -> Scene:
     title_size, title_masks = _fit_title(title_lines, title_chain, text_w, start_size,
                                          design.title_size or auto_cap, design)
 
-    eyebrow_mask = textlib.line_mask(design.eyebrow, eyebrow_size, body_chain) if design.eyebrow else None
-    sub_masks = [m for m in (textlib.line_mask(t, sub_size, sub_chain) for t in design.subtitle) if m]
-    body_masks = [m for m in (textlib.line_mask(t, body_size, body_chain) for t in design.desc) if m]
+    eyebrow_mask = (textlib.line_mask(prepared(design.eyebrow), eyebrow_size, body_chain,
+                                     tracking=design.tracking) if design.eyebrow else None)
+    sub_masks = [m for m in (textlib.line_mask(prepared(t), sub_size, sub_chain,
+                                               tracking=design.tracking) for t in design.subtitle) if m]
+    body_masks = [m for m in (textlib.line_mask(prepared(t), body_size, body_chain,
+                                                tracking=design.tracking) for t in design.desc) if m]
 
     thickness = max(2, int(round(mode.height * 0.010)))
     divider_w = max(12, int(round(text_w * design.divider_ratio)))
 
-    stack = _Stack()
+    stack = _Stack(design.leading)
     divider_at: int | None = None
     if eyebrow_mask:
         stack.line(eyebrow_mask, palette["accent"], "eyebrow")
