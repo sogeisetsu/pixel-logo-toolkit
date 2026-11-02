@@ -37,8 +37,8 @@ jobs:
           python -m pip install -e .
       - name: 三种模式出图
         run: |
-          pixellogo -c examples/rea.jsonc -m xhs -f png -o out/rea-xhs.png
-          pixellogo -c examples/rea.jsonc -m 4:3 -f png -o out/rea-4x3.png
+          pixellogo -c examples/rea.jsonc -m poster -f png -o out/rea-xhs.png
+          pixellogo -c examples/rea.jsonc -m card -f png -o out/rea-4x3.png
           pixellogo -c examples/og.jsonc -f both -o out/og.png
           pixellogo -c examples/batch.jsonc -f png -o out/batch/
       - uses: actions/upload-artifact@v4

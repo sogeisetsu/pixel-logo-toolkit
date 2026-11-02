@@ -1,7 +1,7 @@
 // 小红书封面：3:4，1080×1440
 // 用法：pixellogo -c examples/rea.jsonc
 {
-  "mode": "xhs",
+  "mode": "poster",
   "preset": "terminal",
 
   "title": "REA",

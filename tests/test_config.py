@@ -68,18 +68,18 @@ class TestMerge(unittest.TestCase):
 class TestResolve(unittest.TestCase):
     def test_defaults(self):
         settings = configlib.resolve({"title": "REA"}, {})
-        self.assertEqual(settings.mode_key, "xhs")
+        self.assertEqual(settings.mode_key, "poster")
         self.assertEqual(settings.scale, 2)
         self.assertEqual(settings.out, "out")
         self.assertEqual(settings.design.preset.key, "terminal")
 
     def test_cli_overrides_file(self):
         settings = configlib.resolve(
-            {"title": "REA", "preset": "cyber", "mode": "og"},
+            {"title": "REA", "preset": "cyber", "mode": "banner"},
             {"preset": "terminal"},
         )
         self.assertEqual(settings.design.preset.key, "terminal")
-        self.assertEqual(settings.mode_key, "og")
+        self.assertEqual(settings.mode_key, "banner")
 
     def test_file_title_used_when_cli_has_none(self):
         settings = configlib.resolve({"title": "来自配置"}, {})
@@ -114,7 +114,7 @@ class TestResolve(unittest.TestCase):
             configlib.resolve({"title": "A", "size": "wide"}, {})
 
     def test_describe_snapshot(self):
-        snapshot = configlib.resolve({"title": "REA", "mode": "og"}, {}).describe()
+        snapshot = configlib.resolve({"title": "REA", "mode": "banner"}, {}).describe()
         self.assertEqual(snapshot["canvas"]["output"], [1280, 640])
         self.assertEqual(snapshot["content"]["title"], "REA")
 

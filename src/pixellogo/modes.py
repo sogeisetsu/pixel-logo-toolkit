@@ -1,7 +1,10 @@
-"""画布模式：画布尺寸、默认排版走向、装饰默认值。
+"""画布模式：尺寸、默认排版走向与装饰默认值。
+
+模式名用语义化单词（poster / card / banner / slide / square），不暴露比例数字；
+比例本身只是结果，不是名字。旧的比例写法保留为别名，避免破坏已有配置。
 
 尺寸以「逻辑像素」定义，输出时统一乘 ``scale``（默认 2），
-因此 540×720 逻辑 = 1080×1440 输出，恰好是小红书封面的 3:4。
+因此 540×720 逻辑 = 1080×1440 输出。
 """
 from __future__ import annotations
 
@@ -17,12 +20,22 @@ class Mode:
     scale: int = 2
     #: center | top
     vertical: str = "center"
+    #: left | center
+    align: str = "left"
     #: 文本可用宽度占内容区宽度的比例
     text_ratio: float = 1.0
-    #: 标题初始字号相对画布高度的比例（随后按可用宽度自动收缩）
+    #: 标题初始字号相对画布高度的比例（随后按可用宽度自动收缩/放大）
     title_ratio: float = 0.24
     #: 默认装饰图形：none | blocks
     motif: str = "none"
+
+    @property
+    def ratio(self) -> str:
+        """比例的文字形式，仅供参考展示。"""
+        from math import gcd
+
+        divisor = gcd(self.width, self.height) or 1
+        return f"{self.width // divisor}:{self.height // divisor}"
 
     @property
     def output_size(self) -> tuple[int, int]:
@@ -30,27 +43,28 @@ class Mode:
 
 
 MODES: dict[str, Mode] = {
-    "xhs": Mode(
-        key="xhs",
-        label="小红书竖版封面 3:4（1080×1440）",
+    "poster": Mode(
+        key="poster",
+        label="竖版海报（小红书封面）",
         width=540,
         height=720,
         vertical="center",
+        align="center",
         text_ratio=1.0,
         title_ratio=0.235,
     ),
-    "4:3": Mode(
-        key="4:3",
-        label="横版 4:3（1440×1080）",
+    "card": Mode(
+        key="card",
+        label="横版卡片（文章头图 / PPT）",
         width=720,
         height=540,
         vertical="center",
         text_ratio=0.94,
         title_ratio=0.26,
     ),
-    "og": Mode(
-        key="og",
-        label="GitHub 仓库预览图 2:1（1280×640）",
+    "banner": Mode(
+        key="banner",
+        label="仓库横幅（GitHub 预览图）",
         width=640,
         height=320,
         vertical="center",
@@ -58,21 +72,57 @@ MODES: dict[str, Mode] = {
         title_ratio=0.30,
         motif="blocks",
     ),
+    "slide": Mode(
+        key="slide",
+        label="宽屏幻灯片（16:9）",
+        width=960,
+        height=540,
+        vertical="center",
+        text_ratio=0.86,
+        title_ratio=0.27,
+    ),
+    "square": Mode(
+        key="square",
+        label="方形图片（社交头像 / 九宫格）",
+        width=540,
+        height=540,
+        vertical="center",
+        align="center",
+        text_ratio=0.92,
+        title_ratio=0.22,
+    ),
 }
 
 ALIASES = {
-    "xiaohongshu": "xhs",
-    "red": "xhs",
-    "redbook": "xhs",
-    "4x3": "4:3",
-    "landscape": "4:3",
-    "github": "og",
-    "repo": "og",
-    "social": "og",
-    "open-graph": "og",
+    # 旧名（1.x 之前按比例命名）
+    "xhs": "poster",
+    "xiaohongshu": "poster",
+    "red": "poster",
+    "redbook": "poster",
+    "3:4": "poster",
+    "3x4": "poster",
+    "4:3": "card",
+    "4x3": "card",
+    "landscape": "card",
+    "og": "banner",
+    "github": "banner",
+    "repo": "banner",
+    "social": "banner",
+    "open-graph": "banner",
+    "2:1": "banner",
+    "2x1": "banner",
+    "16:9": "slide",
+    "16x9": "slide",
+    "wide": "slide",
+    "widescreen": "slide",
+    "1:1": "square",
+    "1x1": "square",
+    "avatar": "square",
+    "portrait": "poster",
+    "story": "poster",
 }
 
-DEFAULT_MODE = "xhs"
+DEFAULT_MODE = "poster"
 
 
 def get_mode(key: str) -> Mode:

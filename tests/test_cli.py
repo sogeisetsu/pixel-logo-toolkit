@@ -38,7 +38,7 @@ class TestList(unittest.TestCase):
     def test_list_modes(self):
         result = run_cli("--list", "modes")
         self.assertEqual(result.returncode, 0, result.stderr)
-        for key in ("xhs", "4:3", "og"):
+        for key in ("poster", "card", "banner", "slide", "square"):
             self.assertIn(key, result.stdout)
         self.assertIn("1080×1440", result.stdout)
 
@@ -56,7 +56,13 @@ class TestRender(unittest.TestCase):
     def test_three_modes(self):
         from PIL import Image
 
-        expected = {"xhs": (1080, 1440), "4:3": (1440, 1080), "og": (1280, 640)}
+        expected = {
+            "poster": (1080, 1440),
+            "card": (1440, 1080),
+            "banner": (1280, 640),
+            "slide": (1920, 1080),
+            "square": (1080, 1080),
+        }
         with tempfile.TemporaryDirectory() as tmp:
             for mode, size in expected.items():
                 target = os.path.join(tmp, f"{mode.replace(':', 'x')}.png")
@@ -69,7 +75,7 @@ class TestRender(unittest.TestCase):
 
     def test_directory_output_uses_slug(self):
         with tempfile.TemporaryDirectory() as tmp:
-            result = run_cli("-t", "My Title", "-m", "og", "-o", tmp)
+            result = run_cli("-t", "My Title", "-m", "banner", "-o", tmp)
             self.assertEqual(result.returncode, 0, result.stderr)
             files = sorted(os.listdir(tmp))
             self.assertEqual(len(files), 2)  # 默认同时产出 png 与 svg
@@ -78,13 +84,13 @@ class TestRender(unittest.TestCase):
 
     def test_format_png_only(self):
         with tempfile.TemporaryDirectory() as tmp:
-            result = run_cli("-t", "A", "-m", "og", "-f", "png", "-o", tmp)
+            result = run_cli("-t", "A", "-m", "banner", "-f", "png", "-o", tmp)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual([n[-4:] for n in os.listdir(tmp)], [".png"])
 
     def test_format_svg_only(self):
         with tempfile.TemporaryDirectory() as tmp:
-            result = run_cli("-t", "A", "-m", "og", "-f", "svg", "-o", tmp)
+            result = run_cli("-t", "A", "-m", "banner", "-f", "svg", "-o", tmp)
             self.assertEqual(result.returncode, 0, result.stderr)
             files = os.listdir(tmp)
             self.assertEqual(len(files), 1)
@@ -97,7 +103,7 @@ class TestRender(unittest.TestCase):
     def test_explicit_file_path_overrides_format(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = os.path.join(tmp, "cover.svg")
-            result = run_cli("-t", "A", "-m", "og", "-f", "both", "-o", target)
+            result = run_cli("-t", "A", "-m", "banner", "-f", "both", "-o", target)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(sorted(os.listdir(tmp)), ["cover.png", "cover.svg"])
 
@@ -112,13 +118,13 @@ class TestRender(unittest.TestCase):
 
     def test_json_flag_reports_dimensions(self):
         with tempfile.TemporaryDirectory() as tmp:
-            result = run_cli("-t", "A", "-m", "og", "-f", "png", "-o", tmp, "--json")
+            result = run_cli("-t", "A", "-m", "banner", "-f", "png", "-o", tmp, "--json")
             payload = __import__("json").loads(result.stdout)
             self.assertEqual(payload[0]["width"], 1280)
             self.assertEqual(payload[0]["height"], 640)
 
     def test_missing_title_is_an_error(self):
-        result = run_cli("-m", "og")
+        result = run_cli("-m", "banner")
         self.assertNotEqual(result.returncode, 0)
 
     def test_unknown_preset_is_an_error(self):
