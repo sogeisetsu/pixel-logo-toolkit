@@ -236,6 +236,8 @@ Docs: https://github.com/sogeisetsu/pixel-logo-toolkit
         "cli.arg.ui_lang": "output language: auto / en / zh (default: auto, follows the terminal locale)",
         # ---- 错误与提示 ----
         "cli.error": "{prog}: error: {message}",
+        "error.pillow": ("pixellogo needs Pillow to render images. "
+                         'Install it with: pip install "pillow>=9.0"'),
         "cli.hint.help": "Run {prog} --help for full usage.",
         "cli.warning": "{prog}: warning: {message}",
         # ---- fonts 子命令 ----
@@ -407,6 +409,7 @@ Docs: https://github.com/sogeisetsu/pixel-logo-toolkit
         "cli.arg.ui_lang": "输出语言：auto / en / zh（默认 auto，跟随终端语言）",
         # ---- 错误与提示 ----
         "cli.error": "{prog}: 错误：{message}",
+        "error.pillow": ('渲染需要 Pillow，请先安装：pip install "pillow>=9.0"'),
         "cli.hint.help": "用 {prog} --help 查看完整用法。",
         "cli.warning": "{prog}: 提示：{message}",
         # ---- fonts 子命令 ----
