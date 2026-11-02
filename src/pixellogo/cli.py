@@ -92,6 +92,8 @@ def build_parser() -> argparse.ArgumentParser:
                         default="auto", help="分隔线样式")
     layout.add_argument("--divider-width", type=float, metavar="RATIO", help="分隔线宽度比（默认 0.42）")
     layout.add_argument("--motif", choices=["auto", "none", "blocks"], default="auto", help="装饰图形")
+    layout.add_argument("--bg-pattern", choices=["none", "grid", "dots", "scanlines"], default=None,
+                        help="背景纹理（默认 none）")
 
     out = parser.add_argument_group("输出")
     out.add_argument("-m", "--mode", default=None, metavar="MODE",
