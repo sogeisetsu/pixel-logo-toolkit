@@ -67,6 +67,9 @@ cd pixel-logo-toolkit
 pip install .
 ```
 
+> 只把仓库克隆下来**不会**自动得到 `pixellogo` 命令，必须执行上面任意一条安装命令。
+> 不想安装时，也可以在仓库目录里用 `PYTHONPATH=src python -m pixellogo ...` 直接运行。
+
 验证安装：
 
 ```console
@@ -524,6 +527,11 @@ src/pixellogo/
 
 **标题被缩得太小？**
 标题宽度受模式与文本区比例限制。换更宽的画布（`-m slide`）、调小 `--margin`，或用 `--title-size` 直接指定字号。
+
+**提示 `pixellogo: command not found`？**
+说明还没安装，只克隆了源码。在仓库目录执行 `pip install .`（或 `pip install -e .` 开发模式、`pipx install .`）后重开终端。
+仍找不到的话，检查 Python 的脚本目录是否在 `PATH` 里：Windows 是 `<Python 安装目录>\\Scripts`，macOS / Linux 通常是 `~/.local/bin`。
+临时不安装：`PYTHONPATH=src python -m pixellogo -t "REA"`。
 
 **中文出现方块或缺字？**
 默认内置简体字体；若标题是繁体、日文或韩文，先 `pixellogo fonts install <lang>` 并加 `--lang`。
