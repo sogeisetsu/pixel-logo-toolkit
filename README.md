@@ -164,6 +164,9 @@ pixellogo -t "REA" -f both -o cover.png     # 指定文件名，自动产出 cov
 | `--bg` `--fg` `--primary` `--accent` `--shadow-color` | 单色覆盖 |
 | `--shadow-offset` | 投影格数，`0` 关闭，默认 `1` |
 | `--title-size` | 标题字号，缺省按画布自动适配（短标题放大、长标题收缩） |
+| `--tracking` | 字距倍率，`1.0` 为字体原始步进，越小越紧凑 |
+| `--leading` | 行高倍率，默认 `1.0` |
+| `--uppercase` | 全部文字转大写 |
 | `--font-title` `--font-sub` `--font-body` | 内置字体名或 `.ttf` 路径 |
 
 **排版**

@@ -23,7 +23,7 @@ FONT_KEYS = {"title", "sub", "body"}
 LAYOUT_KEYS = {
     "align", "vertical", "margin", "divider", "dividerWidth",
     "divider-width", "titleSize", "title-size", "motif", "shadowOffset", "shadow-offset",
-    "cjkBold", "cjk-bold",
+    "cjkBold", "cjk-bold", "tracking", "leading", "uppercase",
 }
 
 ALIGN_VALUES = {"auto", "left", "center"}
@@ -231,6 +231,12 @@ def cli_to_config(args) -> dict:
         layout["motif"] = args.motif
     if args.shadow_offset is not None:
         layout["shadowOffset"] = args.shadow_offset
+    if getattr(args, "tracking", None) is not None:
+        layout["tracking"] = args.tracking
+    if getattr(args, "leading", None) is not None:
+        layout["leading"] = args.leading
+    if getattr(args, "uppercase", False):
+        layout["uppercase"] = True
     if layout:
         data["layout"] = layout
 
@@ -339,6 +345,18 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
     cjk_bold = _layout_value(layout_cfg, "cjkBold", "cjk-bold")
     cjk_bold = 0.018 if cjk_bold is None else float(cjk_bold)
 
+    tracking = _layout_value(layout_cfg, "tracking")
+    tracking = 1.0 if tracking is None else float(tracking)
+    if not 0.5 <= tracking <= 1.5:
+        raise ConfigError("tracking 应在 0.5 到 1.5 之间")
+
+    leading = _layout_value(layout_cfg, "leading")
+    leading = 1.0 if leading is None else float(leading)
+    if not 0.8 <= leading <= 2.0:
+        raise ConfigError("leading 应在 0.8 到 2.0 之间")
+
+    uppercase = bool(_layout_value(layout_cfg, "uppercase"))
+
     scale = merged.get("scale")
     scale = int(scale) if scale else mode.scale
     if not 1 <= scale <= 8:
@@ -365,6 +383,9 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
         divider_ratio=divider_ratio,
         title_size=title_size,
         cjk_bold=cjk_bold,
+        tracking=tracking,
+        leading=leading,
+        uppercase=uppercase,
         motif=motif,
         colors=colors,
         font_overrides={key: value for key, value in fonts_cfg.items() if isinstance(value, str)},

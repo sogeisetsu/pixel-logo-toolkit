@@ -46,6 +46,11 @@ def build_parser() -> argparse.ArgumentParser:
     style.add_argument("--shadow-offset", type=int, default=None, metavar="N",
                        help="投影格数，0 关闭（默认 1）")
     style.add_argument("--title-size", type=int, metavar="PX", help="标题字号，缺省按画布自动适配")
+    style.add_argument("--tracking", type=float, default=None, metavar="RATIO",
+                       help="字距倍率，1.0 为字体原始步进，越小越紧凑")
+    style.add_argument("--leading", type=float, default=None, metavar="RATIO",
+                       help="行高倍率，默认 1.0")
+    style.add_argument("--uppercase", action="store_true", help="全部文字转大写")
     style.add_argument("--font-title", metavar="NAME|PATH", help="主标题字体")
     style.add_argument("--font-sub", metavar="NAME|PATH", help="副标题字体")
     style.add_argument("--font-body", metavar="NAME|PATH", help="说明文字字体")

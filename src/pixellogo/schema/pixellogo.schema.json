@@ -72,6 +72,9 @@
         "titleSize": { "type": "integer", "minimum": 8 },
         "shadowOffset": { "type": "integer", "minimum": 0, "maximum": 4 },
         "motif": { "enum": ["auto", "none", "blocks"] },
+        "tracking": { "type": "number", "minimum": 0.5, "maximum": 1.5 },
+        "leading": { "type": "number", "minimum": 0.8, "maximum": 2.0 },
+        "uppercase": { "type": "boolean" },
         "cjkBold": { "type": "number", "minimum": 0, "maximum": 0.06 }
       }
     },

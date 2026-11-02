@@ -55,11 +55,13 @@ def line_mask(
     chain: list[str],
     unify: bool = True,
     bold_px: int = 0,
+    tracking: float = 1.0,
 ) -> TextMask | None:
     """渲染一行文字，返回二值掩膜；空字符串返回 ``None``。
 
     ``unify=True`` 时整行只用一款字体（中英混排时优先中文像素字体），
     避免同一行出现两种笔画粗细；``False`` 时逐字回退。
+    ``tracking`` 是字距倍率，``1.0`` 为字体原始步进，小于 1 更紧凑。
     """
     if not text:
         return None
@@ -78,10 +80,14 @@ def line_mask(
     descent = max(descents)
     line_height = ascent + descent
 
+    def advance_of(font, part: str) -> int:
+        if tracking == 1.0:
+            return int(round(font.getlength(part)))
+        # 逐字累加，才能对字距做非整数缩放
+        return sum(int(round(font.getlength(char) * tracking)) for char in part)
+
     pad = size + bold_px * 2 + 4
-    advance = 0
-    for font, part in metrics:
-        advance += int(round(font.getlength(part)))
+    advance = sum(advance_of(font, part) for font, part in metrics)
     canvas_w = advance + pad * 2
     canvas_h = line_height + pad * 2
 
@@ -90,7 +96,14 @@ def line_mask(
     baseline_y = pad + ascent
     pen = pad
     for font, part in metrics:
-        draw.text((pen, baseline_y - font.getmetrics()[0]), part, font=font, fill=255)
+        top = baseline_y - font.getmetrics()[0]
+        if tracking == 1.0:
+            draw.text((pen, top), part, font=font, fill=255)
+        else:
+            for char in part:
+                draw.text((pen, top), char, font=font, fill=255)
+                pen += int(round(font.getlength(char) * tracking))
+            continue
         pen += int(round(font.getlength(part)))
 
     if bold_px > 0:
