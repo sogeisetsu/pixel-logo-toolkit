@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pixellogo"
-version = "0.1.0"
+version = "0.2.0"
 description = "8-bit / 复古终端风格的像素 Logo 与封面图生成器"
 readme = "README.md"
 requires-python = ">=3.9"

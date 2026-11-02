@@ -26,7 +26,7 @@ class TestVersion(unittest.TestCase):
     def test_version_flag(self):
         result = run_cli("--version")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("pixellogo 0.1.0", result.stdout)
+        self.assertIn("pixellogo 0.2.0", result.stdout)
 
     def test_help_lists_entrypoint(self):
         result = run_cli("--help")
