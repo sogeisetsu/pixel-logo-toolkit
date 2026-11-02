@@ -34,6 +34,11 @@ EPILOG = """\
     pixellogo -c examples/rea.jsonc
     pixellogo -c examples/batch.jsonc -o out/ --json
 
+  中文字形变体
+    pixellogo fonts                    列出各语言字体状态
+    pixellogo fonts install ja         按需下载日文字体
+    pixellogo -t "タイトル" --lang ja
+
   查看选项清单
     pixellogo --list modes
     pixellogo --list presets
@@ -80,6 +85,8 @@ def build_parser() -> argparse.ArgumentParser:
     style.add_argument("--leading", type=float, default=None, metavar="RATIO",
                        help="行高倍率，默认 1.0")
     style.add_argument("--uppercase", action="store_true", help="全部文字转大写")
+    style.add_argument("--lang", metavar="LANG", default=None,
+                       help="中日韩字形变体：zh-hans / zh-hant / ja / ko（默认 zh-hans）")
     style.add_argument("--font-title", metavar="NAME|PATH", help="主标题字体")
     style.add_argument("--font-sub", metavar="NAME|PATH", help="副标题字体")
     style.add_argument("--font-body", metavar="NAME|PATH", help="说明文字字体")
@@ -117,6 +124,35 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _cmd_fonts(argv: list[str]) -> int:
+    from pixellogo import fonts
+
+    if not argv or argv[0] in ("list", "--list"):
+        labels = {"bundled": "随包内置", "installed": "已下载", "missing": "未安装"}
+        for key, status in fonts.variant_status():
+            print(f"{key:<8} {labels.get(status, status)}")
+        print(f"\n字体目录：{fonts.font_cache_dir()}")
+        print("按需安装：pixellogo fonts install <zh-hant|ja|ko>")
+        return 0
+
+    if argv[0] == "install":
+        if len(argv) < 2:
+            print(f"{PROG} fonts install 需要语言参数，如：{PROG} fonts install ja",
+                  file=sys.stderr)
+            return 2
+        from pixellogo import fontpack
+
+        try:
+            fontpack.install(argv[1])
+        except (ValueError, RuntimeError) as exc:
+            print(f"{PROG}: {exc}", file=sys.stderr)
+            return 2
+        return 0
+
+    print(f"{PROG} fonts 支持：list / install <lang>", file=sys.stderr)
+    return 2
+
+
 def _cmd_list(kind: str) -> int:
     from pixellogo import fonts, modes, presets
 
@@ -145,6 +181,8 @@ def main(argv: list[str] | None = None) -> int:
     if argv[0] in ("help", "--help-all"):
         parser.print_help()
         return 0
+    if argv[0] == "fonts":
+        return _cmd_fonts(argv[1:])
 
     args = parser.parse_args(argv)
 
