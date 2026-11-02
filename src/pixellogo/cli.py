@@ -129,8 +129,8 @@ def _cmd_fonts(argv: list[str]) -> int:
 
     if not argv or argv[0] in ("list", "--list"):
         labels = {"bundled": "随包内置", "installed": "已下载", "missing": "未安装"}
-        for key, status in fonts.variant_status():
-            print(f"{key:<8} {labels.get(status, status)}")
+        for key, status, label in fonts.variant_status():
+            print(f"{key:<8} {labels.get(status, status):<8} {label}")
         print(f"\n字体目录：{fonts.font_cache_dir()}")
         print("按需安装：pixellogo fonts install <zh-hant|ja|ko>")
         return 0
