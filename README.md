@@ -30,6 +30,7 @@
   - [Python API](#python-api)
   - [辅助开关与退出码](#辅助开关与退出码)
 - [预设画廊](#预设画廊)
+- [命令示例画廊](docs/gallery.md) — 40 张成品与逐条命令
 - [开发与测试](#开发与测试)
 - [常见问题](#常见问题)
 - [许可](#许可)
@@ -98,6 +99,8 @@ REA-poster.png  REA-poster.svg
 ```
 
 不带任何参数运行 `pixellogo` 会直接打印帮助；`pixellogo --help`、`pixellogo -h`、`pixellogo help` 等价。
+
+更多场景（不同语言、不同画布、不同纹理，共 40 张成品与对应命令）见 [命令示例画廊](docs/gallery.md)。
 
 ---
 
@@ -510,6 +513,9 @@ render(
     <td></td>
   </tr>
 </table>
+
+想看完整用法组合——不同画布 × 预设 × 背景纹理，以及日语 / 韩语 / 繁体中文的在地文化示例，
+共 40 张成品与逐条命令：**[命令示例画廊 →](docs/gallery.md)**
 
 ---
 

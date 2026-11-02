@@ -1,0 +1,533 @@
+# 命令示例画廊
+
+40 张成品，全部由 `pixellogo` 一条命令生成，覆盖五种画布、十套预设、四种背景纹理。
+前半部分是不同语言与工具的标识卡；后半部分是日语 / 韩语 / 繁体中文的在地文化示例，文案取自当地辨识度高的作品、人物与地点。
+每张图下方标注**生成它的完整命令**，可直接复制运行。
+
+> 图片均以 `-f png` 输出到 `docs/images/gallery/`；想换格式把 `-f png` 改成 `svg` 或 `both` 即可。
+> 多语言小节需要先下载对应字形字体，命令见各小节开头。
+
+## 索引
+
+| # | 主题 | 画布 | 预设 | 纹理 | 语言 |
+| --- | --- | --- | --- | --- | --- |
+| 01 | PYTHON | `poster` | `terminal` | `none` | — |
+| 02 | KOTLIN | `poster` | `candy` | `none` | — |
+| 03 | DOCKER | `poster` | `forest` | `grid` | — |
+| 04 | GRAPHQL | `poster` | `ocean` | `none` | — |
+| 05 | ANSIBLE | `poster` | `noir` | `dots` | — |
+| 06 | PHP | `poster` | `arcade` | `none` | — |
+| 07 | RUST | `card` | `arcade` | `none` | — |
+| 08 | ZIG | `card` | `forest` | `none` | — |
+| 09 | ELIXIR | `card` | `ocean` | `none` | — |
+| 10 | SQL | `card` | `minimal` | `dots` | — |
+| 11 | VIM | `card` | `terminal` | `none` | — |
+| 12 | KUBECTL | `card` | `ocean` | `dots` | — |
+| 13 | KAFKA | `card` | `sunset` | `grid` | — |
+| 14 | NIX | `card` | `paper` | `scanlines` | — |
+| 15 | WASM | `card` | `cyber` | `none` | — |
+| 16 | COBOL | `card` | `terminal` | `none` | — |
+| 17 | GO | `banner` | `cyber` | `none` | — |
+| 18 | SWIFT | `banner` | `sunset` | `none` | — |
+| 19 | BASH | `banner` | `cyber` | `scanlines` | — |
+| 20 | NGINX | `banner` | `noir` | `none` | — |
+| 21 | LINUX | `banner` | `paper` | `none` | — |
+| 22 | TERRAFORM | `banner` | `forest` | `grid` | — |
+| 23 | TYPESCRIPT | `slide` | `minimal` | `none` | — |
+| 24 | HASKELL | `slide` | `paper` | `none` | — |
+| 25 | POSTGRESQL | `slide` | `ocean` | `grid` | — |
+| 26 | GRPC | `slide` | `forest` | `none` | — |
+| 27 | C++ | `square` | `noir` | `none` | — |
+| 28 | LUA | `square` | `terminal` | `grid` | — |
+| 29 | REDIS | `square` | `arcade` | `scanlines` | — |
+| 30 | GIT | `square` | `minimal` | `none` | — |
+| 31 | RUBY | `square` | `candy` | `none` | — |
+| 32 | ELISP | `square` | `sunset` | `dots` | — |
+| 33 | 人間失格 | `poster` | `paper` | `none` | `ja` |
+| 34 | 坂本龍馬 | `banner` | `terminal` | `none` | `ja` |
+| 35 | 東京 | `square` | `ocean` | `dots` | `ja` |
+| 36 | 안중근 | `poster` | `noir` | `none` | `ko` |
+| 37 | 한글 | `card` | `paper` | `none` | `ko` |
+| 38 | 서울 | `square` | `sunset` | `grid` | `ko` |
+| 39 | 蘭亭 | `poster` | `paper` | `none` | `zh-hant` |
+| 40 | 香港 | `banner` | `ocean` | `scanlines` | `zh-hant` |
+
+覆盖情况：**5/5** 画布 · **10/10** 预设 · **4/4** 纹理（`dots`、`grid`、`none`、`scanlines`） · **3** 种语言字形（`ja`、`ko`、`zh-hant`）。
+
+## 竖版海报（`poster`，1080×1440 · 3:4）
+
+### PYTHON · 最朴素的竖版封面
+
+<img src="images/gallery/python.png" width="560" alt="PYTHON">
+
+```bash
+pixellogo -t PYTHON -s "WRITE LESS" -s "DO MORE" -d "python.org · 3.13" -m poster -p terminal \
+-f png -o docs/images/gallery/python.png
+```
+
+画布 `poster` · 预设 `terminal` · 副标题 `WRITE LESS / DO MORE`
+
+### KOTLIN · 浅色糖果配亮粉主色
+
+<img src="images/gallery/kotlin.png" width="560" alt="KOTLIN">
+
+```bash
+pixellogo -t KOTLIN -s CONCISE -s SAFE -d "JVM · Android · Multiplatform" -m poster -p candy \
+-f png -o docs/images/gallery/kotlin.png
+```
+
+画布 `poster` · 预设 `candy` · 副标题 `CONCISE / SAFE`
+
+### DOCKER · 方格纸纹理 + 右上角徽标
+
+<img src="images/gallery/docker.png" width="560" alt="DOCKER">
+
+```bash
+pixellogo -t DOCKER -s BUILD -s SHIP -s RUN -d 容器化一切 -m poster -p forest --bg-pattern grid \
+--badge v27 -f png -o docs/images/gallery/docker.png
+```
+
+画布 `poster` · 预设 `forest` · 纹理 `grid` · 副标题 `BUILD / SHIP / RUN`
+
+### GRAPHQL · 加了 eyebrow 小字标签
+
+<img src="images/gallery/graphql.png" width="560" alt="GRAPHQL">
+
+```bash
+pixellogo -t GRAPHQL -s "ASK FOR" -s "EXACTLY WHAT" -s "YOU NEED" -d "单一端点 · 强类型查询" -m poster \
+-p ocean -e "API / 2026" -f png -o docs/images/gallery/graphql.png
+```
+
+画布 `poster` · 预设 `ocean` · 副标题 `ASK FOR / EXACTLY WHAT / YOU NEED`
+
+### ANSIBLE · 黑白底 + 点阵 + 强制大写
+
+<img src="images/gallery/ansible.png" width="560" alt="ANSIBLE">
+
+```bash
+pixellogo -t ANSIBLE -s AUTOMATE -s EVERYTHING -d "agentless · yaml" -m poster -p noir \
+--bg-pattern dots --uppercase -f png -o docs/images/gallery/ansible.png
+```
+
+画布 `poster` · 预设 `noir` · 纹理 `dots` · 副标题 `AUTOMATE / EVERYTHING`
+
+### PHP · 投影加粗一档，浮雕感更强
+
+<img src="images/gallery/php.png" width="560" alt="PHP">
+
+```bash
+pixellogo -t PHP -s HYPER -s TEXT -d "1995 — 至今仍在跑半个互联网" -m poster -p arcade --shadow-offset 2 \
+-f png -o docs/images/gallery/php.png
+```
+
+画布 `poster` · 预设 `arcade` · 副标题 `HYPER / TEXT`
+
+## 横版卡片（`card`，1440×1080 · 4:3）
+
+### RUST · 深色底高对比
+
+<img src="images/gallery/rust.png" width="560" alt="RUST">
+
+```bash
+pixellogo -t RUST -s FEARLESS -s CONCURRENCY -d "cargo build --release" -m card -p arcade -f png \
+-o docs/images/gallery/rust.png
+```
+
+画布 `card` · 预设 `arcade` · 副标题 `FEARLESS / CONCURRENCY`
+
+### ZIG · 森林绿 + 暖橙强调线
+
+<img src="images/gallery/zig.png" width="560" alt="ZIG">
+
+```bash
+pixellogo -t ZIG -s "NO HIDDEN" -s ALLOCATIONS -d "compile time 即运行时" -m card -p forest -f png \
+-o docs/images/gallery/zig.png
+```
+
+画布 `card` · 预设 `forest` · 副标题 `NO HIDDEN / ALLOCATIONS`
+
+### ELIXIR · 深海色调
+
+<img src="images/gallery/elixir.png" width="560" alt="ELIXIR">
+
+```bash
+pixellogo -t ELIXIR -s "LET IT CRASH" -d "beam · otp · 并发" -m card -p ocean -f png \
+-o docs/images/gallery/elixir.png
+```
+
+画布 `card` · 预设 `ocean` · 副标题 `LET IT CRASH`
+
+### SQL · 极简 + 点阵
+
+<img src="images/gallery/sql.png" width="560" alt="SQL">
+
+```bash
+pixellogo -t SQL -s "SELECT *" -s "FROM IDEA" -d "JOIN 出你想要的答案" -m card -p minimal \
+--bg-pattern dots -f png -o docs/images/gallery/sql.png
+```
+
+画布 `card` · 预设 `minimal` · 纹理 `dots` · 副标题 `SELECT * / FROM IDEA`
+
+### VIM · 字距收紧
+
+<img src="images/gallery/vim.png" width="560" alt="VIM">
+
+```bash
+pixellogo -t VIM -s QWERTY -d "hjkl · :wq" -m card -p terminal --tracking 0.9 --uppercase -f png \
+-o docs/images/gallery/vim.png
+```
+
+画布 `card` · 预设 `terminal` · 副标题 `QWERTY`
+
+### KUBECTL · 徽标 + 点阵
+
+<img src="images/gallery/kubectl.png" width="560" alt="KUBECTL">
+
+```bash
+pixellogo -t KUBECTL -s "GET PODS" -s "ALL NAMESPACES" -d "declare desired state" -m card \
+-p ocean --bg-pattern dots --badge k8s -f png -o docs/images/gallery/kubectl.png
+```
+
+画布 `card` · 预设 `ocean` · 纹理 `dots` · 副标题 `GET PODS / ALL NAMESPACES`
+
+### KAFKA · 日落配色 + 方格
+
+<img src="images/gallery/kafka.png" width="560" alt="KAFKA">
+
+```bash
+pixellogo -t KAFKA -s STREAM -s "AT SCALE" -d "topic · partition · offset" -m card -p sunset \
+--bg-pattern grid -f png -o docs/images/gallery/kafka.png
+```
+
+画布 `card` · 预设 `sunset` · 纹理 `grid` · 副标题 `STREAM / AT SCALE`
+
+### NIX · 纸本 + 虚线分隔
+
+<img src="images/gallery/nix.png" width="560" alt="NIX">
+
+```bash
+pixellogo -t NIX -s REPRODUCIBLE -s "BY DEFAULT" -d flake.nix -m card -p paper \
+--bg-pattern scanlines --divider dash -f png -o docs/images/gallery/nix.png
+```
+
+画布 `card` · 预设 `paper` · 纹理 `scanlines` · 副标题 `REPRODUCIBLE / BY DEFAULT`
+
+### WASM · 赛博绿 + 右侧阶梯装饰
+
+<img src="images/gallery/wasm.png" width="560" alt="WASM">
+
+```bash
+pixellogo -t WASM -s "NEAR NATIVE" -s "IN BROWSER" -d ".wat → .wasm" -m card -p cyber \
+--motif blocks -f png -o docs/images/gallery/wasm.png
+```
+
+画布 `card` · 预设 `cyber` · 副标题 `NEAR NATIVE / IN BROWSER`
+
+### COBOL · 居中对齐 + 固定字号
+
+<img src="images/gallery/cobol.png" width="560" alt="COBOL">
+
+```bash
+pixellogo -t COBOL -s "1960 —" -s "STILL RUNNING" -d "PAYROLL · BANKING" -m card -p terminal \
+--align center --title-size 120 -f png -o docs/images/gallery/cobol.png
+```
+
+画布 `card` · 预设 `terminal` · 副标题 `1960 — / STILL RUNNING`
+
+## 仓库横幅（`banner`，1280×640 · 2:1）
+
+### GO · 默认带右下阶梯
+
+<img src="images/gallery/go.png" width="560" alt="GO">
+
+```bash
+pixellogo -t GO -s SIMPLE -s FAST -s RELIABLE -d "go run main.go" -m banner -p cyber -f png \
+-o docs/images/gallery/go.png
+```
+
+画布 `banner` · 预设 `cyber` · 副标题 `SIMPLE / FAST / RELIABLE`
+
+### SWIFT · 日落橙标题
+
+<img src="images/gallery/swift.png" width="560" alt="SWIFT">
+
+```bash
+pixellogo -t SWIFT -s "SAFE BY DESIGN" -d "iOS · macOS · Server" -m banner -p sunset -f png \
+-o docs/images/gallery/swift.png
+```
+
+画布 `banner` · 预设 `sunset` · 副标题 `SAFE BY DESIGN`
+
+### BASH · 扫描线 + 赛博
+
+<img src="images/gallery/bash.png" width="560" alt="BASH">
+
+```bash
+pixellogo -t BASH -s "THE SHELL" -s "THAT STICKS" -d "set -euo pipefail" -m banner -p cyber \
+--bg-pattern scanlines -f png -o docs/images/gallery/bash.png
+```
+
+画布 `banner` · 预设 `cyber` · 纹理 `scanlines` · 副标题 `THE SHELL / THAT STICKS`
+
+### NGINX · 单色覆盖：把强调线改成蓝
+
+<img src="images/gallery/nginx.png" width="560" alt="NGINX">
+
+```bash
+pixellogo -t NGINX -s REVERSE -s PROXY -d "worker_processes auto;" -m banner -p noir \
+--accent "#2563EB" -f png -o docs/images/gallery/nginx.png
+```
+
+画布 `banner` · 预设 `noir` · 副标题 `REVERSE / PROXY`
+
+### LINUX · 关掉右下装饰
+
+<img src="images/gallery/linux.png" width="560" alt="LINUX">
+
+```bash
+pixellogo -t LINUX -s EVERYTHING -s "IS A FILE" -d /dev/null -m banner -p paper --motif none \
+-f png -o docs/images/gallery/linux.png
+```
+
+画布 `banner` · 预设 `paper` · 副标题 `EVERYTHING / IS A FILE`
+
+### TERRAFORM · 方格 + 大写
+
+<img src="images/gallery/terraform.png" width="560" alt="TERRAFORM">
+
+```bash
+pixellogo -t TERRAFORM -s "PLAN · APPLY" -s REPEAT -d "infra as code" -m banner -p forest \
+--bg-pattern grid --uppercase -f png -o docs/images/gallery/terraform.png
+```
+
+画布 `banner` · 预设 `forest` · 纹理 `grid` · 副标题 `PLAN · APPLY / REPEAT`
+
+## 宽屏幻灯片（`slide`，1920×1080 · 16:9）
+
+### TYPESCRIPT · 宽幅左对齐
+
+<img src="images/gallery/typescript.png" width="560" alt="TYPESCRIPT">
+
+```bash
+pixellogo -t TYPESCRIPT -s "TYPES ARE" -s DOCUMENTATION -d "tsc --noEmit" -m slide -p minimal \
+-f png -o docs/images/gallery/typescript.png
+```
+
+画布 `slide` · 预设 `minimal` · 副标题 `TYPES ARE / DOCUMENTATION`
+
+### HASKELL · 块状分隔线
+
+<img src="images/gallery/haskell.png" width="560" alt="HASKELL">
+
+```bash
+pixellogo -t HASKELL -s PURE -s FUNCTIONAL -d "monad >>= world" -m slide -p paper \
+--divider block -f png -o docs/images/gallery/haskell.png
+```
+
+画布 `slide` · 预设 `paper` · 副标题 `PURE / FUNCTIONAL`
+
+### POSTGRESQL · 方格 + 徽标
+
+<img src="images/gallery/postgresql.png" width="560" alt="POSTGRESQL">
+
+```bash
+pixellogo -t POSTGRESQL -s "THE WORLD'S MOST" -s "ADVANCED SQL" -d "since 1996" -m slide \
+-p ocean --bg-pattern grid --badge 16 -f png -o docs/images/gallery/postgresql.png
+```
+
+画布 `slide` · 预设 `ocean` · 纹理 `grid` · 副标题 `THE WORLD'S MOST / ADVANCED SQL`
+
+### GRPC · 森林绿宽屏
+
+<img src="images/gallery/grpc.png" width="560" alt="GRPC">
+
+```bash
+pixellogo -t GRPC -s PROTOBUF -s EVERYWHERE -d "unary · stream · bidi" -m slide -p forest -f png \
+-o docs/images/gallery/grpc.png
+```
+
+画布 `slide` · 预设 `forest` · 副标题 `PROTOBUF / EVERYWHERE`
+
+## 方形图片（`square`，1080×1080 · 1:1）
+
+### C++ · 方图，黑底白字
+
+<img src="images/gallery/cpp.png" width="560" alt="C++">
+
+```bash
+pixellogo -t C++ -s "ZERO COST" -s ABSTRACTION -d "RAII or bust" -m square -p noir -f png \
+-o docs/images/gallery/cpp.png
+```
+
+画布 `square` · 预设 `noir` · 副标题 `ZERO COST / ABSTRACTION`
+
+### LUA · 方图 + 方格
+
+<img src="images/gallery/lua.png" width="560" alt="LUA">
+
+```bash
+pixellogo -t LUA -s EMBEDDABLE -s "AND SMALL" -d "~30kb" -m square -p terminal --bg-pattern grid \
+-f png -o docs/images/gallery/lua.png
+```
+
+画布 `square` · 预设 `terminal` · 纹理 `grid` · 副标题 `EMBEDDABLE / AND SMALL`
+
+### REDIS · 扫描线 + 街机配色
+
+<img src="images/gallery/redis.png" width="560" alt="REDIS">
+
+```bash
+pixellogo -t REDIS -s "IN MEMORY" -d "GET · SET · EXPIRE" -m square -p arcade \
+--bg-pattern scanlines -f png -o docs/images/gallery/redis.png
+```
+
+画布 `square` · 预设 `arcade` · 纹理 `scanlines` · 副标题 `IN MEMORY`
+
+### GIT · 方图极简
+
+<img src="images/gallery/git.png" width="560" alt="GIT">
+
+```bash
+pixellogo -t GIT -s COMMIT -s EARLY -s "COMMIT OFTEN" -d "git rebase -i" -m square -p minimal \
+-f png -o docs/images/gallery/git.png
+```
+
+画布 `square` · 预设 `minimal` · 副标题 `COMMIT / EARLY / COMMIT OFTEN`
+
+### RUBY · 行高放宽
+
+<img src="images/gallery/ruby.png" width="560" alt="RUBY">
+
+```bash
+pixellogo -t RUBY -s HAPPY -s HACKING -d "puts 'hello'" -m square -p candy --leading 1.2 -f png \
+-o docs/images/gallery/ruby.png
+```
+
+画布 `square` · 预设 `candy` · 副标题 `HAPPY / HACKING`
+
+### ELISP · 日落 + 点阵
+
+<img src="images/gallery/elisp.png" width="560" alt="ELISP">
+
+```bash
+pixellogo -t ELISP -s M-x -s BUTTERFLY -d "emacs forever" -m square -p sunset --bg-pattern dots \
+-f png -o docs/images/gallery/elisp.png
+```
+
+画布 `square` · 预设 `sunset` · 纹理 `dots` · 副标题 `M-x / BUTTERFLY`
+
+## 多语言与在地文化
+
+同一套渲染管线，换掉字形变体就能贴合当地的正字法：日文用日标字形、韩文用谚文、繁体用台标 / 港标字形。中英混排会自动切回中文像素字体，不会出现豆腐块。
+
+### 日语（`--lang ja`）
+
+> 需要先执行 `pixellogo fonts install ja`；缺字体时命令会直接提示安装。
+
+### 人間失格 · 太宰治《人间失格》，四个字刚好撑满竖版
+
+<img src="images/gallery/ja-ningen-shikkaku.png" width="560" alt="人間失格">
+
+```bash
+pixellogo -t 人間失格 -s 太宰治 -s 1948 -d 生まれてきてすみません -m poster -p paper --lang ja -f png \
+-o docs/images/gallery/ja-ningen-shikkaku.png
+```
+
+画布 `poster` · 预设 `paper` · 语言 `ja` · 副标题 `太宰治 / 1948`
+
+### 坂本龍馬 · 坂本龙马致姊信名句：把日本重新洗一遍
+
+<img src="images/gallery/ja-sakamoto-ryoma.png" width="560" alt="坂本龍馬">
+
+```bash
+pixellogo -t 坂本龍馬 -s "1836 — 1867" -s "土佐 · 幕末" -d 日本を今一度せんたくいたし候 -m banner -p terminal \
+--lang ja -f png -o docs/images/gallery/ja-sakamoto-ryoma.png
+```
+
+画布 `banner` · 预设 `terminal` · 语言 `ja` · 副标题 `1836 — 1867 / 土佐 · 幕末`
+
+### 東京 · 东京都：方图 + 点阵，像城市规划图
+
+<img src="images/gallery/ja-tokyo.png" width="560" alt="東京">
+
+```bash
+pixellogo -t 東京 -s TOKYO -d "人口約1400万 · 47都道府県の中心" -m square -p ocean --bg-pattern dots \
+--lang ja -f png -o docs/images/gallery/ja-tokyo.png
+```
+
+画布 `square` · 预设 `ocean` · 纹理 `dots` · 语言 `ja` · 副标题 `TOKYO`
+
+### 韩语（`--lang ko`）
+
+> 需要先执行 `pixellogo fonts install ko`；缺字体时命令会直接提示安装。
+
+### 안중근 · 安重根义士：黑白纪实配色，适合纪念性画面
+
+<img src="images/gallery/ko-ahn-jung-geun.png" width="560" alt="안중근">
+
+```bash
+pixellogo -t 안중근 -s "安重根 義士" -s "1879 — 1910" -d "동양평화론 · 하얼빈 의거" -m poster -p noir --lang ko \
+-f png -o docs/images/gallery/ko-ahn-jung-geun.png
+```
+
+画布 `poster` · 预设 `noir` · 语言 `ko` · 副标题 `安重根 義士 / 1879 — 1910`
+
+### 한글 · 训民正音：谚文与它的原始字数
+
+<img src="images/gallery/ko-hangul.png" width="560" alt="한글">
+
+```bash
+pixellogo -t 한글 -s 세종대왕 -s 1443 -d "훈민정음 · 28字" -m card -p paper --lang ko -f png \
+-o docs/images/gallery/ko-hangul.png
+```
+
+画布 `card` · 预设 `paper` · 语言 `ko` · 副标题 `세종대왕 / 1443`
+
+### 서울 · 首尔：汉江与六百年都城
+
+<img src="images/gallery/ko-seoul.png" width="560" alt="서울">
+
+```bash
+pixellogo -t 서울 -s SEOUL -d "한강 · 600년 수도" -m square -p sunset --bg-pattern grid --lang ko \
+-f png -o docs/images/gallery/ko-seoul.png
+```
+
+画布 `square` · 预设 `sunset` · 纹理 `grid` · 语言 `ko` · 副标题 `SEOUL`
+
+### 繁体中文（`--lang zh-hant`）
+
+> 需要先执行 `pixellogo fonts install zh-hant`；缺字体时命令会直接提示安装。
+
+### 蘭亭 · 《兰亭集序》开篇句，繁体字形
+
+<img src="images/gallery/hant-lanting.png" width="560" alt="蘭亭">
+
+```bash
+pixellogo -t 蘭亭 -s 王羲之 -s 永和九年 -d 仰觀宇宙之大 -m poster -p paper --lang zh-hant -f png \
+-o docs/images/gallery/hant-lanting.png
+```
+
+画布 `poster` · 预设 `paper` · 语言 `zh-hant` · 副标题 `王羲之 / 永和九年`
+
+### 香港 · 香港：维港与天星小轮，扫描线像海面反光
+
+<img src="images/gallery/hant-hongkong.png" width="560" alt="香港">
+
+```bash
+pixellogo -t 香港 -s "HONG KONG" -d "維多利亞港 · 天星小輪" -m banner -p ocean --bg-pattern scanlines \
+--lang zh-hant -f png -o docs/images/gallery/hant-hongkong.png
+```
+
+画布 `banner` · 预设 `ocean` · 纹理 `scanlines` · 语言 `zh-hant` · 副标题 `HONG KONG`
+
+---
+
+## 再往下可以怎么改
+
+- 换输出格式：把 `-f png` 改成 `-f svg`（纯矢量）或 `-f both`。
+- 换尺寸：把 `-m card` 换成其他模式，或用 `--size 1200x900` 自定义。
+- 改配色：加 `--accent "#FF3D81"` 之类的单色覆盖，或在预设基础上用 `--bg` / `--primary`。
+- 换字形变体：`--lang ja` / `ko` / `zh-hant`，缺字体时先 `pixellogo fonts install <lang>`。
+- 批量出图：把多条配置写进一个 JSONC 数组，用 `pixellogo -c batch.jsonc -o out/` 一次跑完，详见 [README 的配置文件一节](../README.md#配置文件jsonc)。
+
+返回 [README](../README.md)。
