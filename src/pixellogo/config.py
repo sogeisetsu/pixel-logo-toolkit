@@ -8,6 +8,7 @@ import json
 import re
 from dataclasses import dataclass, field
 
+from pixellogo import fonts as fontlib
 from pixellogo import modes as modes_mod
 from pixellogo.layout import Design
 from pixellogo.presets import Preset, get_preset
@@ -16,7 +17,7 @@ COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 
 TOP_KEYS = {
     "mode", "size", "preset", "title", "subtitle", "desc", "eyebrow", "badge",
-    "colors", "fonts", "layout", "output", "scale", "out", "format",
+    "colors", "fonts", "layout", "output", "scale", "out", "format", "lang",
 }
 COLOR_KEYS = {"bg", "fg", "primary", "accent", "shadow"}
 FONT_KEYS = {"title", "sub", "body"}
@@ -199,6 +200,7 @@ def cli_to_config(args) -> dict:
     put("scale", args.scale)
     put("out", args.out)
     put("format", getattr(args, "format", None))
+    put("lang", getattr(args, "lang", None))
 
     colors = {}
     for key, value in (("bg", args.bg), ("fg", args.fg), ("primary", args.primary),
@@ -364,6 +366,19 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
 
     uppercase = bool(_layout_value(layout_cfg, "uppercase"))
 
+    lang = fontlib.normalize_lang(str(merged.get("lang") or fontlib.DEFAULT_LANG))
+    if lang not in fontlib.BUNDLED_VARIANTS:
+        try:
+            fontlib.cjk_font_path(lang)
+        except fontlib.FontError:
+            # 只有内容里真的出现中日韩字符时才强制要求安装
+            sample = " ".join([title, *as_lines(merged.get("subtitle"), "subtitle"),
+                               *as_lines(merged.get("desc"), "desc"),
+                               str(merged.get("eyebrow") or ""), str(merged.get("badge") or "")])
+            if any("\u2e80" <= char <= "\u9fff" for char in sample):
+                raise ConfigError(
+                    f"未安装 {lang} 字体，请先运行 `pixellogo fonts install {lang}`"
+                ) from None
     scale = merged.get("scale")
     scale = int(scale) if scale else mode.scale
     if not 1 <= scale <= 8:
@@ -395,6 +410,7 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
         uppercase=uppercase,
         motif=motif,
         pattern=pattern,
+        lang=lang,
         colors=colors,
         font_overrides={key: value for key, value in fonts_cfg.items() if isinstance(value, str)},
     )

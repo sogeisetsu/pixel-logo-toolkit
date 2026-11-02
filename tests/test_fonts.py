@@ -1,7 +1,10 @@
 """字体注册与字形覆盖测试。"""
 import os
+import shutil
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
@@ -60,6 +63,48 @@ class TestSelection(unittest.TestCase):
     def test_chain_deduplicates(self):
         chain = fonts.resolve_chain("ark-pixel", ["ark-pixel"])
         self.assertEqual(len(chain), 1)
+
+
+class TestLanguageVariants(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.env = patch.dict(os.environ, {"PIXELLOGO_FONT_DIR": self.tmp})
+        self.env.start()
+
+    def tearDown(self):
+        self.env.stop()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_bundled_variant_resolves(self):
+        path = fonts.cjk_font_path("zh-hans")
+        self.assertTrue(path.endswith("ArkPixel-zh-hans.ttf"))
+        self.assertTrue(os.path.isfile(path))
+
+    def test_aliases_normalize(self):
+        self.assertEqual(fonts.normalize_lang("zh_CN"), "zh-hans")
+        self.assertEqual(fonts.normalize_lang("zh-TW"), "zh-hant")
+        self.assertEqual(fonts.normalize_lang("JP"), "ja")
+
+    def test_unknown_language(self):
+        with self.assertRaises(fonts.FontError):
+            fonts.normalize_lang("fr")
+
+    def test_missing_variant_gives_install_hint(self):
+        with self.assertRaises(fonts.FontError) as ctx:
+            fonts.cjk_font_path("ja")
+        self.assertIn("fonts install ja", str(ctx.exception))
+
+    def test_cached_variant_is_picked_up(self):
+        target = os.path.join(self.tmp, "ArkPixel-ja.ttf")
+        with open(target, "wb") as handle:
+            handle.write(b"\x00" * 2048)
+        self.assertEqual(fonts.cjk_font_path("ja"), target)
+
+    def test_variant_status_lists_all(self):
+        status = dict(fonts.variant_status())
+        self.assertEqual(status["zh-hans"], "bundled")
+        self.assertIn("ja", status)
+        self.assertIn("ko", status)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+import os
 import struct
 from dataclasses import dataclass
 from functools import lru_cache
@@ -57,14 +58,86 @@ BUILTIN_FONTS: dict[str, FontSpec] = {
     ),
     "ark-pixel": FontSpec(
         key="ark-pixel",
-        filename="ArkPixel12pxProportional.ttf",
-        label="Ark Pixel 12px Proportional (zh_hans)",
+        filename="ArkPixel-zh-hans.ttf",
+        label="Ark Pixel 12px Proportional (zh-hans)",
         coverage="cjk",
         license_file="OFL-ArkPixel12pxProportional.txt",
     ),
 }
 
 DEFAULT_CJK_FALLBACK = "ark-pixel"
+
+#: 中文回退字体支持的语言变体：语言 → (本地文件名, 发行包内文件名)
+CJK_VARIANTS: dict[str, tuple[str, str]] = {
+    "zh-hans": ("ArkPixel-zh-hans.ttf", "ark-pixel-12px-proportional-zh_hans.ttf"),
+    "zh-hant": ("ArkPixel-zh-hant.ttf", "ark-pixel-12px-proportional-zh_hant.ttf"),
+    "ja": ("ArkPixel-ja.ttf", "ark-pixel-12px-proportional-ja.ttf"),
+    "ko": ("ArkPixel-ko.ttf", "ark-pixel-12px-proportional-ko.ttf"),
+}
+
+CJK_ALIASES = {
+    "zh": "zh-hans",
+    "zh-cn": "zh-hans",
+    "zh_hans": "zh-hans",
+    "zh-tw": "zh-hant",
+    "zh-hk": "zh-hant",
+    "zh_hant": "zh-hant",
+    "jp": "ja",
+    "ja-jp": "ja",
+    "kr": "ko",
+    "ko-kr": "ko",
+}
+
+#: 随包分发的变体，其余从 GitHub Release 按需下载
+BUNDLED_VARIANTS = {"zh-hans"}
+
+DEFAULT_LANG = "zh-hans"
+
+
+def font_cache_dir() -> Path:
+    """用户字体目录，可用环境变量 PIXELLOGO_FONT_DIR 覆盖。"""
+    override = os.environ.get("PIXELLOGO_FONT_DIR")
+    if override:
+        return Path(override).expanduser()
+    return Path.home() / ".pixellogo" / "fonts"
+
+
+def normalize_lang(lang: str) -> str:
+    key = (lang or DEFAULT_LANG).strip().lower().replace("_", "-")
+    key = CJK_ALIASES.get(key, key)
+    if key not in CJK_VARIANTS:
+        known = "、".join(CJK_VARIANTS)
+        raise FontError(f"未知语言 {lang!r}；可用：{known}")
+    return key
+
+
+def cjk_font_path(lang: str = DEFAULT_LANG) -> str:
+    """返回某语言变体的字体路径；未安装时抛出带安装提示的错误。"""
+    key = normalize_lang(lang)
+    filename = CJK_VARIANTS[key][0]
+    bundled = FONT_DIR / filename
+    if bundled.is_file():
+        return str(bundled)
+    cached = font_cache_dir() / filename
+    if cached.is_file():
+        return str(cached)
+    raise FontError(
+        f"未安装 {key} 字体。运行 `pixellogo fonts install {key}` 下载后重试，"
+        f"或改用 --lang zh-hans"
+    )
+
+
+def variant_status() -> list[tuple[str, str]]:
+    """列出各语言变体的状态：bundled / installed / missing。"""
+    rows: list[tuple[str, str]] = []
+    for key, (filename, _) in CJK_VARIANTS.items():
+        if (FONT_DIR / filename).is_file():
+            rows.append((key, "bundled"))
+        elif (font_cache_dir() / filename).is_file():
+            rows.append((key, "installed"))
+        else:
+            rows.append((key, "missing"))
+    return rows
 
 
 class FontError(ValueError):

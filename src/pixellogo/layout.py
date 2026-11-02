@@ -40,6 +40,7 @@ class Design:
     font_overrides: dict[str, str] = field(default_factory=dict)
     motif: str = "auto"          # auto | none | blocks
     pattern: str = "none"        # none | grid | dots | scanlines
+    lang: str = "zh-hans"        # zh-hans | zh-hant | ja | ko
 
 
 def _resolve_colors(design: Design) -> dict[str, str]:
@@ -54,16 +55,24 @@ def _resolve_colors(design: Design) -> dict[str, str]:
     return palette
 
 
+def _fallback(design: Design) -> list[str]:
+    """中文字形回退：按 lang 选具体变体，缺失时由 config 层提前拦下。"""
+    return [fontlib.cjk_font_path(design.lang)]
+
+
 def _title_chain(design: Design) -> list[str]:
-    return fontlib.resolve_chain(design.font_overrides.get("title") or design.preset.title_font)
+    return fontlib.resolve_chain(design.font_overrides.get("title") or design.preset.title_font,
+                                 _fallback(design))
 
 
 def _sub_chain(design: Design) -> list[str]:
-    return fontlib.resolve_chain(design.font_overrides.get("sub") or design.preset.sub_font)
+    return fontlib.resolve_chain(design.font_overrides.get("sub") or design.preset.sub_font,
+                                 _fallback(design))
 
 
 def _body_chain(design: Design) -> list[str]:
-    return fontlib.resolve_chain(design.font_overrides.get("body") or design.preset.body_font)
+    return fontlib.resolve_chain(design.font_overrides.get("body") or design.preset.body_font,
+                                 _fallback(design))
 
 
 def _bold_for(text: str, chain: list[str], size: int, design: Design) -> int:
