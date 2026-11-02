@@ -210,8 +210,8 @@ pixel-logo-toolkit/
 ├─ src/pixellogo/            生成器实现
 │  ├─ text.py                文本 → 二值掩膜 → 水平游程 → 整数矩形
 │  ├─ layout.py              行栈排版（标题投影、分隔线、徽标）
-│  ├─ presets.py             五套配色预设
-│  ├─ modes.py               三种画布规格
+│  ├─ presets.py             十套配色预设
+│  ├─ modes.py               五种画布规格
 │  ├─ fonts.py               字体注册与字形覆盖检测
 │  └─ render/                SVG 与 PNG 双后端
 ├─ src/pixellogo/assets/
@@ -224,10 +224,10 @@ pixel-logo-toolkit/
 ### 常用命令
 
 ```bash
-# 三模式出图
-pixellogo -t "【主标题】" -s "【副标题】" -d "【说明文字】" -m xhs
-pixellogo -t "【主标题】" -m 4:3 -f png -o out/
-pixellogo -t "【主标题】" -m og  -f svg -o out/
+# 换画布出图
+pixellogo -t "【主标题】" -s "【副标题】" -d "【说明文字】" -m poster
+pixellogo -t "【主标题】" -m card -f png -o out/
+pixellogo -t "【主标题】" -m banner -f svg -o out/
 
 # 换配色预设
 pixellogo -t "【主标题】" -p cyber
