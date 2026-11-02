@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import json
 
+from pixellogo import i18n
+
 
 class JsoncError(ValueError):
     """JSONC 语法错误。"""
@@ -43,7 +45,7 @@ def strip_comments(text: str) -> str:
             if nxt == "*":
                 end = text.find("*/", index + 2)
                 if end < 0:
-                    raise JsoncError("块注释没有闭合：缺少 */")
+                    raise JsoncError(i18n.t("jsonc.comment.unclosed"))
                 index = end + 2
                 continue
         out.append(char)
@@ -92,7 +94,8 @@ def loads(text: str):
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError as exc:
-        raise JsoncError(f"配置解析失败（第 {exc.lineno} 行第 {exc.colno} 列）：{exc.msg}") from None
+        raise JsoncError(i18n.t("jsonc.parse.failed", line=exc.lineno,
+                                col=exc.colno, msg=exc.msg)) from None
 
 
 def load(path: str):
@@ -101,4 +104,4 @@ def load(path: str):
         with open(path, "r", encoding="utf-8") as handle:
             return loads(handle.read())
     except FileNotFoundError:
-        raise JsoncError(f"配置文件不存在：{path}") from None
+        raise JsoncError(i18n.t("jsonc.file.missing", path=path)) from None

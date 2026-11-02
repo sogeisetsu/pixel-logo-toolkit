@@ -1,4 +1,8 @@
-"""命令行入口。"""
+"""命令行入口。
+
+所有面向用户的文案都经 :mod:`pixellogo.i18n` 取用，默认跟随终端语言，
+也可以用 ``--ui-lang`` 或 ``PIXELLOGO_UI_LANG`` 显式指定。
+"""
 from __future__ import annotations
 
 import argparse
@@ -8,137 +12,174 @@ import webbrowser
 from pathlib import Path
 
 from pixellogo import __version__
+from pixellogo import i18n
 from pixellogo.paths import targets as _targets
 from pixellogo.paths import unique_paths as _unique
 
 PROG = "pixellogo"
 
+UI_LANG_FLAG = "--ui-lang"
+UI_LANG_CHOICES = ("auto", "en", "zh")
 
-EPILOG = """\
-常用示例
-  最小用法
-    pixellogo -t "REA" -s "REVERSE ENGINEER" -d "One CLI for agents"
 
-  指定画布与格式
-    pixellogo -t "REA" -m poster -f png -o out/
-    pixellogo -t "REA" -m banner -f svg -o out/banner.svg
+class _Parser(argparse.ArgumentParser):
+    """把 usage 前缀与常见报错换成当前语言的 argparse。"""
 
-  换风格与配色
-    pixellogo -t "PIXEL" -p cyber
-    pixellogo -t "PIXEL" -p forest --set colors.accent=#FF3D81
+    @staticmethod
+    def _localize(text: str) -> str:
+        if i18n.is_chinese() and text.startswith("usage:"):
+            return "用法:" + text[len("usage:"):]
+        return text
 
-  中文标题
-    pixellogo -t "像素工具包" -s "PIXEL LOGO TOOLKIT" --badge NEW
+    def format_usage(self) -> str:
+        return self._localize(super().format_usage())
 
-  用配置文件
-    pixellogo -c examples/rea.jsonc
-    pixellogo -c examples/batch.jsonc -o out/ --json
+    def format_help(self) -> str:
+        return self._localize(super().format_help())
 
-  中文字形变体
-    pixellogo fonts                    列出各语言字体状态
-    pixellogo fonts install ja         按需下载日文字体
-    pixellogo -t "タイトル" --lang ja
-
-  查看选项清单
-    pixellogo --list modes
-    pixellogo --list presets
-    pixellogo --list fonts
-
-参数优先级：内置默认 < --preset < 配置文件 < 命令行参数
-完整文档：https://github.com/sogeisetsu/pixel-logo-toolkit
-"""
+    def error(self, message: str):  # noqa: D102 - 覆盖 argparse 行为
+        self.print_usage(sys.stderr)
+        self.exit(2, i18n.t("cli.error", prog=self.prog,
+                            message=i18n.translate_argparse_error(message)) + "\n")
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    parser = _Parser(
         prog=PROG,
-        description="生成 8-bit / 复古终端风格的像素图（PNG / SVG）。",
-        epilog=EPILOG,
+        description=i18n.t("cli.description"),
+        epilog=i18n.t("cli.epilog"),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         add_help=False,
     )
-    general = parser.add_argument_group("通用选项")
-    general.add_argument("-h", "--help", action="help", help="显示本帮助并退出")
+    general = parser.add_argument_group(i18n.t("cli.group.general"))
+    general.add_argument("-h", "--help", action="help", help=i18n.t("cli.arg.help"))
     general.add_argument("-V", "--version", action="version", version=f"{PROG} {__version__}",
-                         help="显示版本号并退出")
+                         help=i18n.t("cli.arg.version"))
+    general.add_argument(UI_LANG_FLAG, choices=list(UI_LANG_CHOICES), default="auto",
+                         metavar="LANG", help=i18n.t("cli.arg.ui_lang"))
 
-    content = parser.add_argument_group("内容")
-    content.add_argument("-t", "--title", help="主标题，支持 \\n 换行")
-    content.add_argument("-s", "--subtitle", action="append", metavar="TEXT", help="副标题行，可重复")
-    content.add_argument("-d", "--desc", action="append", metavar="TEXT", help="底部说明行，可重复")
-    content.add_argument("-e", "--eyebrow", default="", metavar="TEXT", help="标题上方的小字标签")
-    content.add_argument("--badge", default="", metavar="TEXT", help="右上角徽标文字")
+    content = parser.add_argument_group(i18n.t("cli.group.content"))
+    content.add_argument("-t", "--title", help=i18n.t("cli.arg.title"))
+    content.add_argument("-s", "--subtitle", action="append", metavar="TEXT",
+                         help=i18n.t("cli.arg.subtitle"))
+    content.add_argument("-d", "--desc", action="append", metavar="TEXT",
+                         help=i18n.t("cli.arg.desc"))
+    content.add_argument("-e", "--eyebrow", default="", metavar="TEXT",
+                         help=i18n.t("cli.arg.eyebrow"))
+    content.add_argument("--badge", default="", metavar="TEXT", help=i18n.t("cli.arg.badge"))
 
-    style = parser.add_argument_group("风格")
+    style = parser.add_argument_group(i18n.t("cli.group.style"))
     style.add_argument("-p", "--preset", default=None, metavar="NAME",
-                       help="风格预设，见 --list presets（默认 terminal）")
-    style.add_argument("--bg", metavar="HEX", help="底色")
-    style.add_argument("--fg", metavar="HEX", help="字色")
-    style.add_argument("--primary", metavar="HEX", help="主色（标题）")
-    style.add_argument("--accent", metavar="HEX", help="强调色（分隔线/徽标）")
-    style.add_argument("--shadow-color", metavar="HEX", help="投影色")
+                       help=i18n.t("cli.arg.preset"))
+    style.add_argument("--bg", metavar="HEX", help=i18n.t("cli.arg.bg"))
+    style.add_argument("--fg", metavar="HEX", help=i18n.t("cli.arg.fg"))
+    style.add_argument("--primary", metavar="HEX", help=i18n.t("cli.arg.primary"))
+    style.add_argument("--accent", metavar="HEX", help=i18n.t("cli.arg.accent"))
+    style.add_argument("--shadow-color", metavar="HEX", help=i18n.t("cli.arg.shadow_color"))
     style.add_argument("--shadow-offset", type=int, default=None, metavar="N",
-                       help="投影格数，0 关闭（默认 1）")
-    style.add_argument("--title-size", type=int, metavar="PX", help="标题字号，缺省按画布自动适配")
+                       help=i18n.t("cli.arg.shadow_offset"))
+    style.add_argument("--title-size", type=int, metavar="PX", help=i18n.t("cli.arg.title_size"))
     style.add_argument("--tracking", type=float, default=None, metavar="RATIO",
-                       help="字距倍率，1.0 为字体原始步进，越小越紧凑")
+                       help=i18n.t("cli.arg.tracking"))
     style.add_argument("--leading", type=float, default=None, metavar="RATIO",
-                       help="行高倍率，默认 1.0")
-    style.add_argument("--uppercase", action="store_true", help="全部文字转大写")
-    style.add_argument("--lang", metavar="LANG", default=None,
-                       help="中日韩字形变体：zh-hans / zh-hant / ja / ko（默认 zh-hans）")
-    style.add_argument("--font-title", metavar="NAME|PATH", help="主标题字体")
-    style.add_argument("--font-sub", metavar="NAME|PATH", help="副标题字体")
-    style.add_argument("--font-body", metavar="NAME|PATH", help="说明文字字体")
+                       help=i18n.t("cli.arg.leading"))
+    style.add_argument("--uppercase", action="store_true", help=i18n.t("cli.arg.uppercase"))
+    style.add_argument("--lang", metavar="LANG", default=None, help=i18n.t("cli.arg.lang"))
+    style.add_argument("--font-title", metavar="NAME|PATH", help=i18n.t("cli.arg.font_title"))
+    style.add_argument("--font-sub", metavar="NAME|PATH", help=i18n.t("cli.arg.font_sub"))
+    style.add_argument("--font-body", metavar="NAME|PATH", help=i18n.t("cli.arg.font_body"))
 
-    layout = parser.add_argument_group("排版")
-    layout.add_argument("--align", choices=["auto", "left", "center"], default="auto", help="对齐方式")
-    layout.add_argument("--vertical", choices=["auto", "top", "center"], default="auto", help="纵向锚定")
-    layout.add_argument("--margin", type=float, metavar="RATIO", help="安全边距，相对画布短边（默认 0.06）")
+    layout = parser.add_argument_group(i18n.t("cli.group.layout"))
+    layout.add_argument("--align", choices=["auto", "left", "center"], default="auto",
+                        help=i18n.t("cli.arg.align"))
+    layout.add_argument("--vertical", choices=["auto", "top", "center"], default="auto",
+                        help=i18n.t("cli.arg.vertical"))
+    layout.add_argument("--margin", type=float, metavar="RATIO", help=i18n.t("cli.arg.margin"))
     layout.add_argument("--divider", choices=["auto", "line", "dash", "block", "none"],
-                        default="auto", help="分隔线样式")
-    layout.add_argument("--divider-width", type=float, metavar="RATIO", help="分隔线宽度比（默认 0.42）")
-    layout.add_argument("--motif", choices=["auto", "none", "blocks"], default="auto", help="装饰图形")
+                        default="auto", help=i18n.t("cli.arg.divider"))
+    layout.add_argument("--divider-width", type=float, metavar="RATIO",
+                        help=i18n.t("cli.arg.divider_width"))
+    layout.add_argument("--motif", choices=["auto", "none", "blocks"], default="auto",
+                        help=i18n.t("cli.arg.motif"))
     layout.add_argument("--bg-pattern", choices=["none", "grid", "dots", "scanlines"], default=None,
-                        help="背景纹理（默认 none）")
+                        help=i18n.t("cli.arg.bg_pattern"))
 
-    out = parser.add_argument_group("输出")
-    out.add_argument("-m", "--mode", default=None, metavar="MODE",
-                     help="画布模式：poster / card / banner / slide / square（默认 poster）")
-    out.add_argument("--size", metavar="WxH", help="自定义画布，如 1200x900")
-    out.add_argument("--scale", type=int, default=None, metavar="N", help="输出放大倍数（默认 2）")
+    out = parser.add_argument_group(i18n.t("cli.group.output"))
+    out.add_argument("-m", "--mode", default=None, metavar="MODE", help=i18n.t("cli.arg.mode"))
+    out.add_argument("--size", metavar="WxH", help=i18n.t("cli.arg.size"))
+    out.add_argument("--scale", type=int, default=None, metavar="N", help=i18n.t("cli.arg.scale"))
     out.add_argument("-f", "--format", choices=["png", "svg", "both"], default=None,
-                     help="输出格式：png / svg / both（默认 both）")
-    out.add_argument("-o", "--out", default=None, metavar="PATH", help="输出文件或目录（默认 out/）")
+                     help=i18n.t("cli.arg.format"))
+    out.add_argument("-o", "--out", default=None, metavar="PATH", help=i18n.t("cli.arg.out"))
 
-    config_group = parser.add_argument_group("配置")
-    config_group.add_argument("-c", "--config", metavar="PATH", help="JSONC 配置文件")
+    config_group = parser.add_argument_group(i18n.t("cli.group.config"))
+    config_group.add_argument("-c", "--config", metavar="PATH", help=i18n.t("cli.arg.config"))
     config_group.add_argument("--set", action="append", metavar="KEY=VALUE",
-                              help="按点路径覆盖配置，如 colors.primary=#FF3D81，可重复")
-    config_group.add_argument("--dry-run", action="store_true", help="只打印合并后的配置，不渲染")
+                              help=i18n.t("cli.arg.set"))
+    config_group.add_argument("--dry-run", action="store_true", help=i18n.t("cli.arg.dry_run"))
 
-    misc = parser.add_argument_group("其他")
-    misc.add_argument("--json", action="store_true", help="以 JSON 输出结果，便于脚本消费")
-    misc.add_argument("--open", action="store_true", help="生成后打开第一张图")
-    misc.add_argument("--list", choices=["presets", "modes", "fonts"], help="列出可选项后退出")
+    misc = parser.add_argument_group(i18n.t("cli.group.misc"))
+    misc.add_argument("--json", action="store_true", help=i18n.t("cli.arg.json"))
+    misc.add_argument("--open", action="store_true", help=i18n.t("cli.arg.open"))
+    misc.add_argument("--list", choices=["presets", "modes", "fonts"],
+                      help=i18n.t("cli.arg.list"))
     return parser
+
+
+def _prescan_language(argv: list[str]) -> str:
+    """在建立解析器之前确定语言，保证 ``-h`` / ``--list`` 也按同一语言输出。"""
+    requested: str | None = None
+    for index, token in enumerate(argv):
+        if token == UI_LANG_FLAG and index + 1 < len(argv):
+            requested = argv[index + 1]
+        elif token.startswith(UI_LANG_FLAG + "="):
+            requested = token.split("=", 1)[1]
+    try:
+        return i18n.set_language(requested)
+    except ValueError:
+        # 非法取值交给 argparse 报错，这里先按自动推断排版帮助
+        return i18n.set_language("auto")
+
+
+def _strip_ui_lang(argv: list[str]) -> list[str]:
+    """去掉 ``--ui-lang`` 及其取值，便于把剩余参数交给子命令处理。
+
+    孤立的 ``--ui-lang``（后面没跟值）会被保留，交给 argparse 报错。
+    """
+    cleaned: list[str] = []
+    index = 0
+    while index < len(argv):
+        token = argv[index]
+        if token == UI_LANG_FLAG:
+            following = argv[index + 1] if index + 1 < len(argv) else None
+            if following is not None and not following.startswith("-"):
+                index += 2
+                continue
+            cleaned.append(token)
+            index += 1
+            continue
+        if token.startswith(UI_LANG_FLAG + "="):
+            index += 1
+            continue
+        cleaned.append(token)
+        index += 1
+    return cleaned
 
 
 def _cmd_fonts(argv: list[str]) -> int:
     from pixellogo import fonts
 
     if not argv or argv[0] in ("list", "--list"):
-        labels = {"bundled": "随包内置", "installed": "已下载", "missing": "未安装"}
         for key, status, label in fonts.variant_status():
-            print(f"{key:<8} {labels.get(status, status):<8} {label}")
-        print(f"\n字体目录：{fonts.font_cache_dir()}")
-        print("按需安装：pixellogo fonts install <zh-hant|ja|ko>")
+            status_label = i18n.t(f"fonts.status.{status}")
+            print(f"{key:<8} {i18n.pad(status_label, 16)} {label}")
+        print("\n" + i18n.t("fonts.dir", path=fonts.font_cache_dir()))
+        print(i18n.t("fonts.hint"))
         return 0
 
     if argv[0] == "install":
         if len(argv) < 2:
-            print(f"{PROG} fonts install 需要语言参数，如：{PROG} fonts install ja",
-                  file=sys.stderr)
+            print(i18n.t("fonts.need_lang", prog=PROG), file=sys.stderr)
             return 2
         from pixellogo import fontpack
 
@@ -149,7 +190,7 @@ def _cmd_fonts(argv: list[str]) -> int:
             return 2
         return 0
 
-    print(f"{PROG} fonts 支持：list / install <lang>", file=sys.stderr)
+    print(i18n.t("fonts.usage", prog=PROG), file=sys.stderr)
     return 2
 
 
@@ -157,32 +198,43 @@ def _cmd_list(kind: str) -> int:
     from pixellogo import fonts, modes, presets
 
     if kind == "presets":
+        line = i18n.t("list.presets")
         for preset in presets.list_presets():
             ratio = presets.contrast_ratio(preset.fg, preset.bg)
-            print(f"{preset.key:<10} {preset.label:<10} 底 {preset.bg} 主 {preset.primary} "
-                  f"强调 {preset.accent} 对比度 {ratio:>4.1f}")
+            print(line.format(key=preset.key, label=i18n.pad(preset.label_for(), 26),
+                              bg=preset.bg, primary=preset.primary,
+                              accent=preset.accent, ratio=ratio))
     elif kind == "modes":
+        line = i18n.t("list.modes")
         for mode in modes.list_modes():
             w, h = mode.output_size
-            print(f"{mode.key:<8} {mode.ratio:>5}  {mode.label:<32} 输出 {w}×{h}")
+            print(line.format(key=mode.key, ratio=mode.ratio,
+                              label=i18n.pad(mode.label_for(), 42), w=w, h=h))
     else:
+        line = i18n.t("list.fonts")
         for spec in fonts.list_fonts():
-            print(f"{spec.key:<16} {spec.label:<42} {spec.coverage}")
+            print(line.format(key=spec.key, label=spec.label, coverage=spec.coverage))
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    _prescan_language(argv)
+
     parser = build_parser()
-    if argv is None:
-        argv = sys.argv[1:]
-    if not argv:
+    # 子命令与 help 判定忽略 --ui-lang，这样「pixellogo --ui-lang en fonts」也成立
+    stripped = _strip_ui_lang(argv)
+    if not stripped:
+        if argv:
+            # 只给了 --ui-lang：先让 argparse 校验取值，再按裸执行处理
+            parser.parse_args(argv)
         parser.print_help()
         return 0
-    if argv[0] in ("help", "--help-all"):
+    if stripped[0] in ("help", "--help-all"):
         parser.print_help()
         return 0
-    if argv[0] == "fonts":
-        return _cmd_fonts(argv[1:])
+    if stripped[0] == "fonts":
+        return _cmd_fonts(stripped[1:])
 
     args = parser.parse_args(argv)
 
@@ -200,17 +252,19 @@ def main(argv: list[str] | None = None) -> int:
         for item in args.set or []:
             key, sep, value = item.partition("=")
             if not sep or not key.strip():
-                raise config_mod.ConfigError(f"--set 需要 KEY=VALUE 形式，收到 {item!r}")
+                raise config_mod.ConfigError(
+                    i18n.t("config.set.missing_key") + f" ({item!r})"
+                )
             config_mod.set_path(cli_data, key.strip(), config_mod.coerce(value))
         settings_list = config_mod.resolve_many(file_data, cli_data, forced_out=args.out)
     except (ValueError, OSError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
-        print(f"用 {PROG} --help 查看完整用法。", file=sys.stderr)
+        print(i18n.t("cli.hint.help", prog=PROG), file=sys.stderr)
         return 2
 
     for settings in settings_list:
         for warning in settings.warnings:
-            print(f"{PROG}: 提示：{warning}", file=sys.stderr)
+            print(i18n.t("cli.warning", prog=PROG, message=warning), file=sys.stderr)
 
     if args.dry_run:
         payload = (settings_list[0].describe() if len(settings_list) == 1

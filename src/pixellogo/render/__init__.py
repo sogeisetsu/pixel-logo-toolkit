@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pixellogo import i18n
 from pixellogo.render.raster import to_image
 from pixellogo.render.svg import to_svg
 
@@ -16,7 +17,7 @@ def render(scene, scale: int = 2, fmt: str = "png"):
         return to_image(scene, scale=scale)
     if fmt == "svg":
         return to_svg(scene, scale=scale)
-    raise ValueError(f"不支持的输出格式 {fmt!r}；可选：{'、'.join(FORMATS)}")
+    raise ValueError(i18n.t("render.format.unsupported", fmt=fmt, opts=i18n.join(FORMATS)))
 
 
 def save(scene, path: str | Path, scale: int = 2) -> Path:
@@ -24,7 +25,7 @@ def save(scene, path: str | Path, scale: int = 2) -> Path:
     path = Path(path)
     suffix = path.suffix.lower().lstrip(".")
     if suffix not in FORMATS:
-        raise ValueError(f"无法从扩展名推断格式：{path.name}")
+        raise ValueError(i18n.t("render.format.suffix", name=path.name))
     path.parent.mkdir(parents=True, exist_ok=True)
     result = render(scene, scale=scale, fmt=suffix)
     if suffix == "png":
