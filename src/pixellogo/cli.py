@@ -241,10 +241,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.list:
         return _cmd_list(args.list)
 
-    from pixellogo import config as config_mod
-    from pixellogo import jsonc
-    from pixellogo.layout import build_scene
-    from pixellogo.render import save
+    try:
+        from pixellogo import config as config_mod
+        from pixellogo import jsonc
+        from pixellogo.layout import build_scene
+        from pixellogo.render import save
+    except ImportError:
+        # 渲染链路依赖 Pillow；纯查询命令（--version / --help / --list）不受影响
+        print(f"{PROG}: {i18n.t('error.pillow')}", file=sys.stderr)
+        return 2
 
     try:
         file_data = jsonc.load(args.config) if args.config else None
