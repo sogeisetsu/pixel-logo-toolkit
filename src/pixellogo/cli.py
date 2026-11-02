@@ -3,21 +3,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import webbrowser
 from pathlib import Path
 
 from pixellogo import __version__
+from pixellogo.paths import targets as _targets
+from pixellogo.paths import unique_paths as _unique
 
 PROG = "pixellogo"
-
-
-def slugify(text: str, fallback: str = "pixellogo") -> str:
-    """把标题变成安全的文件名片段（保留中日韩字符）。"""
-    cleaned = re.sub(r"[\\/:*?\"<>|\s]+", "-", text.strip())
-    cleaned = re.sub(r"-{2,}", "-", cleaned).strip("-")
-    return cleaned[:60] or fallback
 
 
 EPILOG = """\
@@ -137,30 +131,6 @@ def _cmd_list(kind: str) -> int:
         for spec in fonts.list_fonts():
             print(f"{spec.key:<16} {spec.label:<42} {spec.coverage}")
     return 0
-
-
-def _targets(out: str, title: str, mode_key: str, formats: list[str]) -> list[Path]:
-    """按输出目标与格式列表算出落地路径。"""
-    path = Path(out)
-    if path.suffix.lower() in (".png", ".svg"):
-        stem = path.with_suffix("")
-        return [stem.with_suffix("." + fmt) for fmt in formats]
-    name = f"{slugify(title)}-{mode_key.replace(':', 'x')}"
-    return [path / f"{name}.{fmt}" for fmt in formats]
-
-
-def _unique(paths: list[Path], used: set[Path]) -> list[Path]:
-    """批量出图时避免同名覆盖。"""
-    result: list[Path] = []
-    for path in paths:
-        candidate = path
-        index = 2
-        while candidate in used:
-            candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
-            index += 1
-        used.add(candidate)
-        result.append(candidate)
-    return result
 
 
 def main(argv: list[str] | None = None) -> int:
