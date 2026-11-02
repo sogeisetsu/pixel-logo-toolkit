@@ -203,42 +203,38 @@
 
 ---
 
-## 八、配套文件(本包结构)
+## 八、配套实现(本包结构)
 
 ```
-像素风格工具包/
-├─ 像素风格SVG提示词库.md   ← 本文件
-├─ make_pixellogo.py         ← 生成器：改 CONTENT 里的文案/配色后重跑
-├─ fonts/                    ← 随包自带的三款像素字体（缺失时脚本会自动下载）
-│   ├─ PressStart2P.ttf      粗体大标题用
-│   ├─ Silkscreen.ttf        副标题用（无小写字形）
-│   └─ PixelifySans.ttf      说明文字用（支持大小写混合）
-├─ samples/                  ← 成品示例（脚本输出目录）
-│   ├─ rea_pixel.svg / .png
-│   └─ dev_pixel.svg / .png
-├─ reference/
-│   └─ reference_style.png   ← 风格来源参考图，采样脚本的默认输入
-├─ tools/                    ← 风格参数采样脚本（从参考图反推网格/色板/投影）
-│   ├─ analyze.py            色板与像素网格初筛
-│   ├─ analyze2.py           像素块精确测量
-│   ├─ analyze3.py           GCD 法定位像素格单位
-│   └─ probe_line.py         装饰线末端方块结构
-└─ analysis/                 ← 采样脚本的输出（放大图等）
+pixel-logo-toolkit/
+├─ src/pixellogo/            生成器实现
+│  ├─ text.py                文本 → 二值掩膜 → 水平游程 → 整数矩形
+│  ├─ layout.py              行栈排版（标题投影、分隔线、徽标）
+│  ├─ presets.py             五套配色预设
+│  ├─ modes.py               三种画布规格
+│  ├─ fonts.py               字体注册与字形覆盖检测
+│  └─ render/                SVG 与 PNG 双后端
+├─ src/pixellogo/assets/
+│  ├─ fonts/                 PressStart2P / Silkscreen / PixelifySans / ArkPixel
+│  └─ licenses/              四份 SIL OFL 1.1 许可原文
+├─ examples/                 可直接运行的 JSONC 配置
+└─ docs/                     本文件与设计文档
 ```
 
 ### 常用命令
 
 ```bash
-# 生成成品（输出到 samples/）
-python make_pixellogo.py
+# 三模式出图
+pixellogo -t "【主标题】" -s "【副标题】" -d "【说明文字】" -m xhs
+pixellogo -t "【主标题】" -m 4:3 -f png -o out/
+pixellogo -t "【主标题】" -m og  -f svg -o out/
 
-# 改文案：编辑 make_pixellogo.py 底部的 CONTENT 列表
-#   {"title": ..., "sub": [...], "foot": [...], "name": ...}
+# 换配色预设
+pixellogo -t "【主标题】" -p cyber
 
-# 对任意参考图重新采样风格参数（不传参则用 reference/reference_style.png）
-python tools/analyze.py  <参考图路径>
-python tools/analyze3.py <参考图路径>
+# 用配置文件
+pixellogo -c examples/og.jsonc --dry-run
 ```
 
-> 全部脚本均使用**相对自身位置**的路径，整个文件夹可整体复制、压缩或转存到其他机器，无需修改任何硬编码路径。
-> 生成 PNG 依赖 Chrome 或 Edge（脚本会自动在常见安装路径中探测），若都没有则只产出 SVG。
+> 风格参数全部落在整数像素网格上：文字先转二值掩膜，再按行合并成矩形，
+> 因此 PNG 与 SVG 出自同一份几何，放大后不会出现平滑边缘。
