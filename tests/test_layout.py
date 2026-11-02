@@ -127,6 +127,18 @@ class TestLayout(unittest.TestCase):
         loose = make(subtitle=["ONE", "TWO", "THREE"], desc=["D"], leading=1.5)
         self.assertGreater(ink_height(loose), ink_height(normal))
 
+    def test_motif_fits_in_narrow_modes(self):
+        # card 的文本区原本占 94%，显式要求装饰时必须让出位置而不是静默忽略
+        scene = make("card", subtitle=["S"], motif="blocks")
+        squares = [r for r in scene.rects
+                   if r.w == r.h and r.w > 20 and r.x > scene.width * 0.6]
+        self.assertGreaterEqual(len(squares), 3)
+
+    def test_motif_off_in_banner_by_default(self):
+        with_motif = make("banner", subtitle=["S"])
+        without = make("banner", subtitle=["S"], motif="none")
+        self.assertGreater(len(with_motif.rects), len(without.rects))
+
     def test_bg_pattern_adds_texture(self):
         plain = make(subtitle=["S"])
         gridded = make(subtitle=["S"], pattern="grid")
