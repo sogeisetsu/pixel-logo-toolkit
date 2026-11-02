@@ -16,7 +16,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from pixellogo import fonts
+from pixellogo import fonts, i18n
 
 CHUNK = 256 * 1024
 
@@ -41,13 +41,13 @@ def install(lang: str, log=print, timeout: int = 180) -> Path:
     for candidate in (fonts.FONT_DIR / variant.filename,
                       fonts.font_cache_dir() / variant.filename):
         if candidate.is_file():
-            log(f"{key} 字体已存在：{candidate}")
+            log(i18n.t("pack.exists", key=key, path=candidate))
             return candidate
 
     target_dir = fonts.font_cache_dir()
     target_dir.mkdir(parents=True, exist_ok=True)
     url = download_url(variant)
-    log(f"下载 {key} 字体包（{variant.label}）…\n  {url}")
+    log(i18n.t("pack.downloading", key=key, label=variant.label, url=url))
 
     with tempfile.TemporaryDirectory() as tmp:
         archive = Path(tmp) / "font.zip"
@@ -68,25 +68,22 @@ def install(lang: str, log=print, timeout: int = 180) -> Path:
             if total:
                 log("")
         except (urllib.error.URLError, TimeoutError) as exc:
-            raise FontPackError(
-                f"下载失败：{exc}\n"
-                f"可设置 PIXELLOGO_FONT_MIRROR 指向镜像目录后重试。"
-            ) from None
+            raise FontPackError(i18n.t("pack.download.failed", error=exc)) from None
 
         try:
             with zipfile.ZipFile(archive) as bundle:
                 if variant.member not in bundle.namelist():
-                    raise FontPackError(f"字体包内没有 {variant.member}")
+                    raise FontPackError(i18n.t("pack.member.missing", member=variant.member))
                 with bundle.open(variant.member) as src:
                     destination = target_dir / variant.filename
                     with open(destination, "wb") as dst:
                         shutil.copyfileobj(src, dst)
         except zipfile.BadZipFile:
-            raise FontPackError("下载到的文件不是有效 zip，可能被网络代理拦截") from None
+            raise FontPackError(i18n.t("pack.zip.invalid")) from None
 
     if destination.stat().st_size < 1_000_000:
         destination.unlink(missing_ok=True)
-        raise FontPackError("字体文件异常（体积过小），已删除，请重试")
+        raise FontPackError(i18n.t("pack.file.small"))
 
-    log(f"已安装：{destination}")
+    log(i18n.t("pack.installed", path=destination))
     return destination

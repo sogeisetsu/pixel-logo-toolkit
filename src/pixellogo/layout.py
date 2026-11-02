@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from pixellogo import fonts as fontlib
+from pixellogo import i18n
 from pixellogo import text as textlib
 from pixellogo.modes import Mode
 from pixellogo.presets import Preset
@@ -268,7 +269,7 @@ def build_scene(design: Design) -> Scene:
 
     title_lines = [prepared(line.strip()) for line in design.title.split("\n") if line.strip()]
     if not title_lines:
-        raise ValueError("主标题不能为空")
+        raise ValueError(i18n.t("layout.title.empty"))
 
     sub_size = max(9, int(round(mode.height * 0.042)))
     body_size = max(9, int(round(mode.height * 0.034)))

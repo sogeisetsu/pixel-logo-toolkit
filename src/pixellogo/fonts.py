@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from pixellogo import i18n
+
 ASSETS = Path(__file__).resolve().parent / "assets"
 FONT_DIR = ASSETS / "fonts"
 LICENSE_DIR = ASSETS / "licenses"
@@ -132,8 +134,7 @@ def normalize_lang(lang: str) -> str:
     key = (lang or DEFAULT_LANG).strip().lower().replace("_", "-")
     key = CJK_ALIASES.get(key, key)
     if key not in CJK_VARIANTS:
-        known = "、".join(CJK_VARIANTS)
-        raise FontError(f"未知语言 {lang!r}；可用：{known}")
+        raise FontError(i18n.t("font.lang.unknown", lang=lang, known=i18n.join(CJK_VARIANTS)))
     return key
 
 
@@ -147,10 +148,7 @@ def cjk_font_path(lang: str = DEFAULT_LANG) -> str:
     cached = font_cache_dir() / filename
     if cached.is_file():
         return str(cached)
-    raise FontError(
-        f"未安装 {key} 字体。运行 `pixellogo fonts install {key}` 下载后重试，"
-        f"或改用 --lang zh-hans"
-    )
+    raise FontError(i18n.t("font.not_installed", key=key))
 
 
 def variant_status() -> list[tuple[str, str, str]]:
@@ -173,25 +171,25 @@ class FontError(ValueError):
 def font_path(name_or_path: str) -> str:
     """把字体键名或文件路径解析成实际路径。"""
     if not name_or_path:
-        raise FontError("字体名为空")
+        raise FontError(i18n.t("font.name.empty"))
     spec = BUILTIN_FONTS.get(name_or_path)
     if spec is not None:
         if not spec.path.exists():
-            raise FontError(f"内置字体缺失：{spec.path}")
+            raise FontError(i18n.t("font.bundled.missing", path=spec.path))
         return str(spec.path)
     candidate = Path(name_or_path).expanduser()
     if candidate.is_file():
         return str(candidate)
-    known = "、".join(sorted(BUILTIN_FONTS))
-    raise FontError(f"未知字体 {name_or_path!r}；可用内置字体：{known}；或传入 .ttf 路径")
+    raise FontError(i18n.t("font.unknown", name=name_or_path,
+                           known=i18n.join(sorted(BUILTIN_FONTS))))
 
 
 def _read_table_offsets(data: bytes) -> dict[bytes, tuple[int, int]]:
     if len(data) < 12:
-        raise FontError("不是有效的字体文件")
+        raise FontError(i18n.t("font.file.invalid"))
     tag = data[:4]
     if tag not in (b"\x00\x01\x00\x00", b"true", b"OTTO", b"ttcf"):
-        raise FontError("不是有效的 TrueType/OpenType 字体")
+        raise FontError(i18n.t("font.file.type"))
     num_tables = struct.unpack(">H", data[4:6])[0]
     tables: dict[bytes, tuple[int, int]] = {}
     for index in range(num_tables):
@@ -237,7 +235,7 @@ def _font_ranges(path: str) -> tuple[tuple[int, int], ...]:
     data = Path(path).read_bytes()
     tables = _read_table_offsets(data)
     if b"cmap" not in tables:
-        raise FontError(f"字体缺少 cmap 表：{path}")
+        raise FontError(i18n.t("font.cmap.missing", path=path))
     cmap_offset = tables[b"cmap"][0]
     num_subtables = struct.unpack(">H", data[cmap_offset + 2 : cmap_offset + 4])[0]
     best: tuple[int, int, int] | None = None  # (优先级, 偏移, 格式)
@@ -254,7 +252,7 @@ def _font_ranges(path: str) -> tuple[tuple[int, int], ...]:
         if best is None or priority > best[0]:
             best = (priority, sub_offset, fmt)
     if best is None:
-        raise FontError(f"字体没有可用的 Unicode cmap 子表：{path}")
+        raise FontError(i18n.t("font.cmap.unicode", path=path))
     _, sub_offset, fmt = best
     raw = (_parse_cmap_format4(data, sub_offset) if fmt == 4
            else _parse_cmap_format12(data, sub_offset))

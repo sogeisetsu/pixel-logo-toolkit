@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pixellogo"
 version = "0.2.0"
-description = "8-bit / 复古终端风格的像素 Logo 与封面图生成器"
+description = "Render 8-bit / retro-terminal pixel logos and cover images (PNG / SVG, bilingual CLI)"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }

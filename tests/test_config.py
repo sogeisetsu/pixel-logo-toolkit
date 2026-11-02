@@ -7,7 +7,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from pixellogo import config as configlib  # noqa: E402
+from pixellogo import i18n  # noqa: E402
 from pixellogo import jsonc  # noqa: E402
+
+
+def setUpModule():
+    # 错误文案随语言变化，这里固定中文，保证断言与宿主语言无关
+    i18n.set_language("zh")
+
+
+def tearDownModule():
+    i18n.reset()
 
 
 class TestJsonc(unittest.TestCase):

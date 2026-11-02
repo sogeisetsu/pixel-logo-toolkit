@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pixellogo import i18n
+
 
 @dataclass(frozen=True)
 class Mode:
@@ -29,6 +31,12 @@ class Mode:
     #: 默认装饰图形：none | blocks
     motif: str = "none"
 
+    def label_for(self) -> str:
+        """当前语言的画布说明；``label`` 保留英文原文作为兜底。"""
+        key = f"mode.{self.key}"
+        text = i18n.t(key, w=self.width, h=self.height)
+        return self.label if text == key else text
+
     @property
     def ratio(self) -> str:
         """比例的文字形式，仅供参考展示。"""
@@ -45,7 +53,7 @@ class Mode:
 MODES: dict[str, Mode] = {
     "poster": Mode(
         key="poster",
-        label="竖版海报（小红书封面）",
+        label="Portrait poster (Xiaohongshu cover)",
         width=540,
         height=720,
         vertical="center",
@@ -55,7 +63,7 @@ MODES: dict[str, Mode] = {
     ),
     "card": Mode(
         key="card",
-        label="横版卡片（文章头图 / PPT）",
+        label="Landscape card (article header / slides)",
         width=720,
         height=540,
         vertical="center",
@@ -64,7 +72,7 @@ MODES: dict[str, Mode] = {
     ),
     "banner": Mode(
         key="banner",
-        label="仓库横幅（GitHub 预览图）",
+        label="Repository banner (GitHub preview)",
         width=640,
         height=320,
         vertical="center",
@@ -74,7 +82,7 @@ MODES: dict[str, Mode] = {
     ),
     "slide": Mode(
         key="slide",
-        label="宽屏幻灯片（16:9）",
+        label="Widescreen slide (16:9)",
         width=960,
         height=540,
         vertical="center",
@@ -83,7 +91,7 @@ MODES: dict[str, Mode] = {
     ),
     "square": Mode(
         key="square",
-        label="方形图片（社交头像 / 九宫格）",
+        label="Square image (social avatar / grid)",
         width=540,
         height=540,
         vertical="center",
@@ -130,17 +138,16 @@ def get_mode(key: str) -> Mode:
     try:
         return MODES[normalized]
     except KeyError:
-        known = "、".join(MODES)
-        raise ValueError(f"未知画布模式 {key!r}；可用：{known}") from None
+        raise ValueError(i18n.t("mode.unknown", key=key, known=i18n.join(MODES))) from None
 
 
 def custom_mode(width: int, height: int, scale: int = 2) -> Mode:
     if width < 64 or height < 64:
-        raise ValueError("自定义画布宽高都必须 ≥ 64")
+        raise ValueError(i18n.t("mode.too_small"))
     ratio = width / height
     return Mode(
         key="custom",
-        label=f"自定义 {width}×{height}",
+        label=f"Custom {width}×{height}",
         width=width,
         height=height,
         scale=scale,

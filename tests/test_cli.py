@@ -9,9 +9,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
 
 
-def run_cli(*args):
+def run_cli(*args, lang="zh"):
+    """运行 CLI；默认固定中文输出，避免测试结果受宿主语言环境影响。"""
     env = dict(os.environ)
     env["PYTHONPATH"] = SRC + os.pathsep + env.get("PYTHONPATH", "")
+    if lang is None:
+        env.pop("PIXELLOGO_UI_LANG", None)
+    else:
+        env["PIXELLOGO_UI_LANG"] = lang
     return subprocess.run(
         [sys.executable, "-m", "pixellogo", *args],
         capture_output=True,
@@ -36,7 +41,7 @@ class TestVersion(unittest.TestCase):
     def test_bare_invocation_prints_help(self):
         result = run_cli()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("usage:", result.stdout)
+        self.assertIn("用法:", result.stdout)
         self.assertIn("常用示例", result.stdout)
 
     def test_help_subcommand(self):

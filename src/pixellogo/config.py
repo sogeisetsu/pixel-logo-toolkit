@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 
 from pixellogo import fonts as fontlib
+from pixellogo import i18n
 from pixellogo import modes as modes_mod
 from pixellogo.layout import Design
 from pixellogo.presets import Preset, get_preset
@@ -117,7 +118,7 @@ def set_path(data: dict, path: str, value) -> None:
     """按点路径写值，例如 ``colors.primary=#fff``。"""
     parts = [part for part in path.split(".") if part]
     if not parts:
-        raise ConfigError("--set 缺少键名")
+        raise ConfigError(i18n.t("config.set.missing_key"))
     cursor = data
     for part in parts[:-1]:
         nxt = cursor.get(part)
@@ -138,10 +139,10 @@ def as_lines(value, key: str) -> list[str]:
         lines: list[str] = []
         for item in value:
             if not isinstance(item, str):
-                raise ConfigError(f"{key} 的每一项都必须是字符串")
+                raise ConfigError(i18n.t("config.lines.item", key=key))
             lines.extend(part.strip() for part in item.split("\n") if part.strip())
         return lines
-    raise ConfigError(f"{key} 必须是字符串或字符串数组")
+    raise ConfigError(i18n.t("config.lines.type", key=key))
 
 
 def _pick_color(colors: dict, key: str) -> str | None:
@@ -149,8 +150,13 @@ def _pick_color(colors: dict, key: str) -> str | None:
     if value is None:
         return None
     if not isinstance(value, str) or not COLOR_RE.match(value):
-        raise ConfigError(f"颜色 {key}={value!r} 不是合法的十六进制色值（如 #02ADFB）")
+        raise ConfigError(i18n.t("config.color.invalid", key=key, value=value))
     return value
+
+
+def _enum_error(name: str, values) -> str:
+    """枚举取值错误的统一措辞。"""
+    return i18n.t("config.enum", name=name, values="/".join(sorted(values)))
 
 
 def _layout_value(layout: dict, *names):
@@ -165,19 +171,19 @@ def validate(merged: dict) -> list[str]:
     warnings: list[str] = []
     for key in merged:
         if key not in TOP_KEYS:
-            warnings.append(f"未知配置项 {key!r} 已忽略")
+            warnings.append(i18n.t("config.warn.unknown", key=key))
     colors = merged.get("colors") or {}
     for key in colors:
         if key not in COLOR_KEYS:
-            warnings.append(f"未知颜色项 colors.{key} 已忽略")
+            warnings.append(i18n.t("config.warn.color", key=key))
     fonts = merged.get("fonts") or {}
     for key in fonts:
         if key not in FONT_KEYS:
-            warnings.append(f"未知字体项 fonts.{key} 已忽略")
+            warnings.append(i18n.t("config.warn.font", key=key))
     layout = merged.get("layout") or {}
     for key in layout:
         if key not in LAYOUT_KEYS:
-            warnings.append(f"未知排版项 layout.{key} 已忽略")
+            warnings.append(i18n.t("config.warn.layout", key=key))
     return warnings
 
 
@@ -254,7 +260,7 @@ def _build_mode(merged: dict) -> modes_mod.Mode:
         try:
             width, height = (int(part) for part in str(size).lower().replace("*", "x").split("x"))
         except (ValueError, TypeError):
-            raise ConfigError(f"画布尺寸 {size!r} 格式不对，应形如 1200x900") from None
+            raise ConfigError(i18n.t("config.size.invalid", size=size)) from None
         return modes_mod.custom_mode(width, height)
     return modes_mod.get_mode(str(merged.get("mode", modes_mod.DEFAULT_MODE)))
 
@@ -272,7 +278,7 @@ def _parse_formats(merged: dict) -> list[str]:
         return ["png", "svg"]
     items = [raw] if isinstance(raw, str) else list(raw) if isinstance(raw, (list, tuple)) else None
     if items is None:
-        raise ConfigError("format 必须是 png / svg / both，或其数组")
+        raise ConfigError(i18n.t("config.format.type"))
     result: list[str] = []
     for item in items:
         key = str(item).lower()
@@ -281,7 +287,7 @@ def _parse_formats(merged: dict) -> list[str]:
         elif key in ("png", "svg"):
             expanded = [key]
         else:
-            raise ConfigError(f"format 只能是 png / svg / both，收到 {item!r}")
+            raise ConfigError(i18n.t("config.format.unknown", item=item))
         for fmt in expanded:
             if fmt not in result:
                 result.append(fmt)
@@ -291,7 +297,7 @@ def _parse_formats(merged: dict) -> list[str]:
 def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Settings:
     """合并配置并构造 ``Settings``。"""
     if file_data is not None and not isinstance(file_data, dict):
-        raise ConfigError("配置文件顶层必须是对象（批量模式请用 --batch）")
+        raise ConfigError(i18n.t("config.root.type"))
 
     merged = deep_merge({}, file_data or {})
     merged = deep_merge(merged, cli_data)
@@ -302,7 +308,7 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
 
     title = merged.get("title")
     if not isinstance(title, str) or not title.strip():
-        raise ConfigError("缺少主标题：用 -t/--title 或在配置里写 title")
+        raise ConfigError(i18n.t("config.title.missing"))
 
     colors_cfg = merged.get("colors") or {}
     colors = {key: _pick_color(colors_cfg, key) for key in COLOR_KEYS}
@@ -311,7 +317,7 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
     fonts_cfg = merged.get("fonts") or {}
     for key in fonts_cfg:
         if not isinstance(fonts_cfg[key], str):
-            raise ConfigError(f"fonts.{key} 必须是字体名或 .ttf 路径")
+            raise ConfigError(i18n.t("config.fonts.value", key=key))
 
     layout_cfg = merged.get("layout") or {}
     align = str(_layout_value(layout_cfg, "align") or "auto")
@@ -319,34 +325,34 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
     divider = str(_layout_value(layout_cfg, "divider") or "auto")
     motif = str(_layout_value(layout_cfg, "motif") or "auto")
     if align not in ALIGN_VALUES:
-        raise ConfigError(f"align 只能是 {'/'.join(sorted(ALIGN_VALUES))}")
+        raise ConfigError(_enum_error("align", ALIGN_VALUES))
     if vertical not in VERTICAL_VALUES:
-        raise ConfigError(f"vertical 只能是 {'/'.join(sorted(VERTICAL_VALUES))}")
+        raise ConfigError(_enum_error("vertical", VERTICAL_VALUES))
     if divider not in DIVIDER_VALUES:
-        raise ConfigError(f"divider 只能是 {'/'.join(sorted(DIVIDER_VALUES))}")
+        raise ConfigError(_enum_error("divider", DIVIDER_VALUES))
     if motif not in MOTIF_VALUES:
-        raise ConfigError(f"motif 只能是 {'/'.join(sorted(MOTIF_VALUES))}")
+        raise ConfigError(_enum_error("motif", MOTIF_VALUES))
 
     pattern = str(_layout_value(layout_cfg, "pattern") or "none")
     if pattern not in PATTERN_VALUES:
-        raise ConfigError(f"pattern 只能是 {'/'.join(sorted(PATTERN_VALUES))}")
+        raise ConfigError(_enum_error("pattern", PATTERN_VALUES))
 
     margin = _layout_value(layout_cfg, "margin")
     if margin is None:
         margin = 0.06
     margin = float(margin)
     if not 0 <= margin < 0.4:
-        raise ConfigError("margin 应在 0 到 0.4 之间")
+        raise ConfigError(i18n.t("config.range", name="margin", low=0, high=0.4))
 
     divider_ratio = _layout_value(layout_cfg, "dividerWidth", "divider-width")
     divider_ratio = 0.42 if divider_ratio is None else float(divider_ratio)
     if not 0.05 <= divider_ratio <= 1.0:
-        raise ConfigError("dividerWidth 应在 0.05 到 1.0 之间")
+        raise ConfigError(i18n.t("config.range", name="dividerWidth", low=0.05, high=1.0))
 
     shadow_offset = _layout_value(layout_cfg, "shadowOffset", "shadow-offset")
     shadow_offset = 1 if shadow_offset is None else int(shadow_offset)
     if not 0 <= shadow_offset <= 4:
-        raise ConfigError("shadowOffset 应在 0 到 4 之间")
+        raise ConfigError(i18n.t("config.range", name="shadowOffset", low=0, high=4))
 
     title_size = _layout_value(layout_cfg, "titleSize", "title-size")
     title_size = None if title_size is None else int(title_size)
@@ -357,12 +363,12 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
     tracking = _layout_value(layout_cfg, "tracking")
     tracking = 1.0 if tracking is None else float(tracking)
     if not 0.5 <= tracking <= 1.5:
-        raise ConfigError("tracking 应在 0.5 到 1.5 之间")
+        raise ConfigError(i18n.t("config.range", name="tracking", low=0.5, high=1.5))
 
     leading = _layout_value(layout_cfg, "leading")
     leading = 1.0 if leading is None else float(leading)
     if not 0.8 <= leading <= 2.0:
-        raise ConfigError("leading 应在 0.8 到 2.0 之间")
+        raise ConfigError(i18n.t("config.range", name="leading", low=0.8, high=2.0))
 
     uppercase = bool(_layout_value(layout_cfg, "uppercase"))
 
@@ -376,13 +382,11 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
                                *as_lines(merged.get("desc"), "desc"),
                                str(merged.get("eyebrow") or ""), str(merged.get("badge") or "")])
             if any("\u2e80" <= char <= "\u9fff" for char in sample):
-                raise ConfigError(
-                    f"未安装 {lang} 字体，请先运行 `pixellogo fonts install {lang}`"
-                ) from None
+                raise ConfigError(i18n.t("config.font.missing", lang=lang)) from None
     scale = merged.get("scale")
     scale = int(scale) if scale else mode.scale
     if not 1 <= scale <= 8:
-        raise ConfigError("scale 应在 1 到 8 之间")
+        raise ConfigError(i18n.t("config.range", name="scale", low=1, high=8))
 
     out_cfg = merged.get("output") or {}
     out = forced_out or merged.get("out") or out_cfg.get("path") or out_cfg.get("dir") or "out"
@@ -422,6 +426,6 @@ def resolve_many(file_data, cli_data: dict, forced_out: str | None = None) -> li
     """配置文件顶层是数组时批量解析，否则等价于单个 ``resolve``。"""
     if isinstance(file_data, list):
         if not file_data:
-            raise ConfigError("配置文件是空数组，没有可渲染的内容")
+            raise ConfigError(i18n.t("config.batch.empty"))
         return [resolve(item, cli_data, forced_out) for item in file_data]
     return [resolve(file_data, cli_data, forced_out)]

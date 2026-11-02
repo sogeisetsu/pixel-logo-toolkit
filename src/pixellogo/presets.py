@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pixellogo import i18n
+
 
 @dataclass(frozen=True)
 class Preset:
@@ -27,11 +29,17 @@ class Preset:
     #: 深色底需要更亮的字色，用于对比度自检
     dark: bool = False
 
+    def label_for(self) -> str:
+        """当前语言的预设定位说明；``label`` 保留英文原文作为兜底。"""
+        key = f"preset.{self.key}"
+        text = i18n.t(key)
+        return self.label if text == key else text
+
 
 PRESETS: dict[str, Preset] = {
     "terminal": Preset(
         key="terminal",
-        label="复古终端（参考原味）",
+        label="Retro terminal (classic)",
         bg="#EEF1F6",
         fg="#1F1F1F",
         primary="#02ADFB",
@@ -43,7 +51,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "cyber": Preset(
         key="cyber",
-        label="暗夜赛博",
+        label="Neon cyber",
         bg="#0D1117",
         fg="#E6EDF3",
         primary="#00E5A0",
@@ -56,7 +64,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "arcade": Preset(
         key="arcade",
-        label="复古街机",
+        label="Retro arcade",
         bg="#1B1F27",
         fg="#F5F5F5",
         primary="#FFD200",
@@ -70,7 +78,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "candy": Preset(
         key="candy",
-        label="柔和糖果",
+        label="Soft candy",
         bg="#FFF5F7",
         fg="#3D2B33",
         primary="#FF7EB6",
@@ -83,7 +91,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "minimal": Preset(
         key="minimal",
-        label="极简专业",
+        label="Clean minimal",
         bg="#F8FAFC",
         fg="#0F172A",
         primary="#2563EB",
@@ -97,7 +105,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "noir": Preset(
         key="noir",
-        label="黑白纪实",
+        label="Monochrome documentary",
         bg="#F4F4F5",
         fg="#18181B",
         primary="#18181B",
@@ -111,7 +119,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "forest": Preset(
         key="forest",
-        label="森林苔绿",
+        label="Forest moss",
         bg="#F0F4EF",
         fg="#1C2B21",
         primary="#2F6B3C",
@@ -125,7 +133,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "sunset": Preset(
         key="sunset",
-        label="黄昏日落",
+        label="Dusk sunset",
         bg="#2B1B2F",
         fg="#FFE8D6",
         primary="#FF8A3D",
@@ -140,7 +148,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "ocean": Preset(
         key="ocean",
-        label="深海青蓝",
+        label="Deep ocean",
         bg="#E8F1F5",
         fg="#0B2E3F",
         primary="#0077B6",
@@ -154,7 +162,7 @@ PRESETS: dict[str, Preset] = {
     ),
     "paper": Preset(
         key="paper",
-        label="纸本手账",
+        label="Paper journal",
         bg="#F5EEE1",
         fg="#33291D",
         primary="#8C3B2E",
@@ -195,8 +203,7 @@ def get_preset(key: str) -> Preset:
     try:
         return PRESETS[key]
     except KeyError:
-        known = "、".join(PRESETS)
-        raise ValueError(f"未知风格预设 {key!r}；可用：{known}") from None
+        raise ValueError(i18n.t("preset.unknown", key=key, known=i18n.join(PRESETS))) from None
 
 
 def list_presets() -> list[Preset]:

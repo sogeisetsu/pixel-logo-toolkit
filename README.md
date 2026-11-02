@@ -1,93 +1,109 @@
 # pixellogo
 
+**English** | [简体中文](README.zh-CN.md)
+
 [![tests](https://github.com/sogeisetsu/pixel-logo-toolkit/actions/workflows/tests.yml/badge.svg)](https://github.com/sogeisetsu/pixel-logo-toolkit/actions/workflows/tests.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](pyproject.toml)
 
-把一个标题、几行副标题和说明文字，渲染成 **8-bit / 复古终端风格**的像素图。
-一条命令出图，支持 PNG 与 SVG，内置五种画布、十套配色，中英日韩混排不掉字。
+Render a title, a few subtitle lines and a footnote into **8-bit / retro-terminal pixel art**.
+One command per image, PNG and SVG output, five canvases, ten palettes, and mixed
+Latin / Chinese / Japanese / Korean text without missing glyphs.
 
-![pixellogo 输出示例](docs/images/banner.png)
+![pixellogo sample output](docs/images/banner.png)
 
 ---
 
-## 目录
+## Table of contents
 
-- [特性](#特性)
-- [安装](#安装)
-- [快速上手](#快速上手)
-- [用法](#用法)
-  - [命令结构与参数优先级](#命令结构与参数优先级)
-  - [常用配方](#常用配方)
-  - [画布模式](#画布模式)
-  - [输出格式与路径规则](#输出格式与路径规则)
-  - [内容字段](#内容字段)
-  - [风格预设与配色](#风格预设与配色)
-  - [排版调节](#排版调节)
-  - [背景纹理](#背景纹理)
-  - [字体与语言](#字体与语言)
-  - [配置文件（JSONC）](#配置文件jsonc)
+- [Features](#features)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Usage](#usage)
+  - [Command structure and precedence](#command-structure-and-precedence)
+  - [Recipes](#recipes)
+  - [Canvas modes](#canvas-modes)
+  - [Output formats and path rules](#output-formats-and-path-rules)
+  - [Content fields](#content-fields)
+  - [Style presets and colors](#style-presets-and-colors)
+  - [Layout controls](#layout-controls)
+  - [Background patterns](#background-patterns)
+  - [Fonts and glyph variants](#fonts-and-glyph-variants)
+  - [Interface language](#interface-language)
+  - [Config files (JSONC)](#config-files-jsonc)
   - [Python API](#python-api)
-  - [辅助开关与退出码](#辅助开关与退出码)
-- [预设画廊](#预设画廊)
-- [命令示例画廊](docs/gallery.md) — 40 张成品与逐条命令
-- [开发与测试](#开发与测试)
-- [常见问题](#常见问题)
-- [许可](#许可)
+  - [Flags and exit codes](#flags-and-exit-codes)
+- [Preset gallery](#preset-gallery)
+- [Command gallery](docs/gallery.md) — 40 rendered samples with the exact commands
+- [Development and tests](#development-and-tests)
+- [FAQ](#faq)
+- [License](#license)
 
 ---
 
-## 特性
+## Features
 
-- **真像素，不是滤镜**：文字先渲染成二值掩膜，再按行合并成整数坐标矩形。放大后每条边都是方块，全程没有抗锯齿、渐变或羽化。
-- **一份几何，两种格式**：PNG 与 SVG 由同一份 `Scene` 输出，像素级一致；SVG 完全自包含，不依赖字体文件。
-- **五种画布**：竖版海报、横版卡片、仓库横幅、宽屏幻灯片、方形图片，各用各的排版策略。
-- **十套配色**：从复古终端到纸本手账，每套都通过对比度自检。
-- **中日韩混排可用**：内置中文像素字体，中英混排时整行统一字形；繁中、日文、韩文按需下载。
-- **配置可复用**：JSONC 配置文件（支持注释与尾逗号）+ 点路径覆盖，一份配置批量出多张。
-- **零浏览器依赖**：纯 Python + Pillow 栅格化，服务器与 CI 都能跑。
+- **Real pixels, not a filter**: text is rasterized into a binary mask, then merged per row
+  into integer-coordinate rectangles. Every edge stays a whole block at any zoom — no
+  anti-aliasing, no gradients, no feathering.
+- **One geometry, two formats**: PNG and SVG come from the same `Scene`, so they match
+  pixel for pixel. The SVG is fully self-contained and does not depend on font files.
+- **Five canvases**: portrait poster, landscape card, repository banner, widescreen slide,
+  square image — each with its own layout strategy.
+- **Ten palettes**: from retro terminal to paper journal, each verified by a contrast check.
+- **CJK-ready**: a Chinese pixel font ships in the box, so mixed Latin/Chinese lines keep one
+  consistent stroke weight; Traditional Chinese, Japanese and Korean download on demand.
+- **Reusable configuration**: JSONC config files (comments and trailing commas allowed) plus
+  dot-path overrides, so one config can drive a whole batch.
+- **No browser dependency**: pure Python and Pillow rasterization; runs on servers and in CI.
+- **Bilingual CLI**: help page, option tables, `fonts` status, warnings and errors in English or
+  Simplified Chinese — following the terminal locale or an explicit `--ui-lang`.
 
 ---
 
-## 安装
+## Install
 
-需要 Python ≥ 3.9，唯一运行时依赖是 Pillow。
+Requires Python ≥ 3.9. The only runtime dependency is Pillow.
 
 ```bash
-# 推荐：pipx 隔离安装，装完即可用 pixellogo 命令
+# Recommended: isolated install with pipx, gives you the pixellogo command
 pipx install git+https://github.com/sogeisetsu/pixel-logo-toolkit.git
 ```
 
 ```bash
-# 或者用 pip
+# Or with pip
 pip install git+https://github.com/sogeisetsu/pixel-logo-toolkit.git
 
-# 或者从源码
+# Or from source
 git clone https://github.com/sogeisetsu/pixel-logo-toolkit.git
 cd pixel-logo-toolkit
 pip install .
 ```
 
-> 只把仓库克隆下来**不会**自动得到 `pixellogo` 命令，必须执行上面任意一条安装命令。
-> 不想安装时，也可以在仓库目录里用 `PYTHONPATH=src python -m pixellogo ...` 直接运行。
+> Cloning the repository alone does **not** create the `pixellogo` command; run one of the
+> installs above. To skip installation entirely, run it from the repository with
+> `PYTHONPATH=src python -m pixellogo ...`.
 
-验证安装：
+Verify the install:
 
 ```console
 $ pixellogo --version
 pixellogo 0.2.0
 
 $ pixellogo --list modes
-poster     3:4  竖版海报（小红书封面）                      输出 1080×1440
-card       4:3  横版卡片（文章头图 / PPT）                 输出 1440×1080
-banner     2:1  仓库横幅（GitHub 预览图）                 输出 1280×640
-slide     16:9  宽屏幻灯片（16:9）                      输出 1920×1080
-square     1:1  方形图片（社交头像 / 九宫格）                 输出 1080×1080
+poster     3:4  Portrait poster (Xiaohongshu cover)        output 1080×1440
+card       4:3  Landscape card (article header / slides)   output 1440×1080
+banner     2:1  Repository banner (GitHub preview)         output 1280×640
+slide     16:9  Widescreen slide (16:9)                    output 1920×1080
+square     1:1  Square image (social avatar / grid)        output 1080×1080
 ```
+
+Your terminal language decides the output language; `--ui-lang zh` switches to Chinese.
+See [Interface language](#interface-language).
 
 ---
 
-## 快速上手
+## Quick start
 
 ```bash
 pixellogo -t "REA" -s "REVERSE ENGINEER" -d "One CLI for agents"
@@ -98,112 +114,116 @@ $ ls out/
 REA-poster.png  REA-poster.svg
 ```
 
-不带任何参数运行 `pixellogo` 会直接打印帮助；`pixellogo --help`、`pixellogo -h`、`pixellogo help` 等价。
+Running `pixellogo` with no arguments prints the help page; `pixellogo --help`,
+`pixellogo -h` and `pixellogo help` are equivalent.
 
-更多场景（不同语言、不同画布、不同纹理，共 40 张成品与对应命令）见 [命令示例画廊](docs/gallery.md)。
+More scenarios — different languages, canvases and textures, 40 rendered samples with their
+commands — live in the [command gallery](docs/gallery.md) (currently in Chinese).
 
 ---
 
-## 用法
+## Usage
 
-### 命令结构与参数优先级
-
-```
-pixellogo [内容参数] [风格参数] [排版参数] [输出参数] [-c 配置文件] [--set 覆盖]
-```
-
-参数分四层生效，后者覆盖前者：
+### Command structure and precedence
 
 ```
-内置默认  <  --preset 预设  <  -c 配置文件  <  命令行参数（含 --set）
+pixellogo [content] [style] [layout] [output] [-c CONFIG] [--set OVERRIDE]
 ```
 
-想看四层叠加后的最终结果，加 `--dry-run`：它只打印合并后的完整配置，不渲染、不写盘。
+Arguments take effect in four layers, each overriding the previous one:
+
+```
+built-in defaults  <  --preset  <  config file  <  command line (including --set)
+```
+
+Add `--dry-run` to inspect the merged result: it prints the final configuration without
+rendering or writing anything.
 
 ```bash
 pixellogo -c examples/og.jsonc -m slide --set colors.accent=#FF3D81 --dry-run
 ```
 
-### 常用配方
+### Recipes
 
-**1. 换画布**
+**1. Change the canvas**
 
 ```bash
 pixellogo -t "PIXEL" -m slide           # 1920×1080
 pixellogo -t "PIXEL" -m square          # 1080×1080
-pixellogo -t "PIXEL" --size 1200x900    # 任意尺寸，忽略 -m
+pixellogo -t "PIXEL" --size 1200x900    # any size, overrides -m
 ```
 
-**2. 换配色风格**
+**2. Change the palette**
 
 ```bash
-pixellogo -t "PIXEL" -p cyber           # 暗夜赛博
-pixellogo -t "PIXEL" -p paper           # 纸本手账
-pixellogo --list presets                # 看全部 10 套
+pixellogo -t "PIXEL" -p cyber           # neon cyber
+pixellogo -t "PIXEL" -p paper           # paper journal
+pixellogo --list presets                # see all ten
 ```
 
-**3. 只改一个颜色**
+**3. Change a single color**
 
 ```bash
 pixellogo -t "PIXEL" -p forest --accent "#FF3D81"
 pixellogo -t "PIXEL" --bg "#0B1020" --fg "#E6EDF3" --primary "#7C3AED"
 ```
 
-**4. 只出位图 / 只出矢量**
+**4. Raster only, or vector only**
 
 ```bash
-pixellogo -t "PIXEL" -f png -o out/     # 只要 PNG
-pixellogo -t "PIXEL" -f svg -o out/     # 只要 SVG
-pixellogo -t "PIXEL" -f both -o out/    # 两种都要（默认）
+pixellogo -t "PIXEL" -f png -o out/     # PNG only
+pixellogo -t "PIXEL" -f svg -o out/     # SVG only
+pixellogo -t "PIXEL" -f both -o out/    # both (default)
 ```
 
-**5. 指定文件名**
+**5. Pick the filename**
 
 ```bash
-pixellogo -t "PIXEL" -o cover.png                    # 产出 cover.png
-pixellogo -t "PIXEL" -f both -o cover.png            # 产出 cover.png + cover.svg
-pixellogo -t "PIXEL" -o assets/covers/banner.png     # 目录不存在会自动创建
+pixellogo -t "PIXEL" -o cover.png                    # writes cover.png
+pixellogo -t "PIXEL" -f both -o cover.png            # writes cover.png + cover.svg
+pixellogo -t "PIXEL" -o assets/covers/banner.png     # missing directories are created
 ```
 
-**6. 中文 / 日文标题**
+**6. Chinese or Japanese titles**
 
 ```bash
 pixellogo -t "像素工具包" -s "PIXEL LOGO TOOLKIT" --badge NEW
-pixellogo -t "ピクセル" --lang ja        # 需先 pixellogo fonts install ja
+pixellogo -t "ピクセル" --lang ja        # requires pixellogo fonts install ja first
 ```
 
-**7. 用配置文件批量出图**
+**7. Batch rendering from a config**
 
 ```bash
 pixellogo -c examples/batch.jsonc -o out/ -f png
-pixellogo -c examples/batch.jsonc -o out/ --json   # 机器可读结果
+pixellogo -c examples/batch.jsonc -o out/ --json   # machine-readable result
 ```
 
-**8. 加背景纹理与装饰**
+**8. Add a texture and a motif**
 
 ```bash
-pixellogo -t "PIXEL" --bg-pattern grid      # 方格纸
-pixellogo -t "PIXEL" --bg-pattern scanlines # 扫描线
-pixellogo -t "PIXEL" -m banner --motif none # 关掉横幅右下角的阶梯装饰
+pixellogo -t "PIXEL" --bg-pattern grid      # graph paper
+pixellogo -t "PIXEL" --bg-pattern scanlines # CRT scanlines
+pixellogo -t "PIXEL" -m banner --motif none # drop the bottom-right stair motif
 ```
 
-**9. 生成后直接打开**
+**9. Open the result**
 
 ```bash
 pixellogo -t "PIXEL" --open
 ```
 
-### 画布模式
+### Canvas modes
 
-模式名是语义化单词，比例只是它的结果。旧的比例写法（`xhs`、`og`、`4:3`、`16:9`、`1:1`…）保留为别名，已有配置不会失效。
+Mode names are semantic words; the aspect ratio is a consequence, not the name. Legacy ratio
+keys (`xhs`, `og`, `4:3`, `16:9`, `1:1` …) remain as aliases, so existing configs keep working.
 
-| 模式 | 输出尺寸 | 比例 | 用途 | 排版特点 |
+| Mode | Output size | Ratio | Typical use | Layout character |
 | --- | --- | --- | --- | --- |
-| `poster` | 1080×1440 | 3:4 | 小红书封面、竖版海报 | 居中排版，标题尽量撑满宽度 |
-| `card` | 1440×1080 | 4:3 | 文章头图、PPT 配图 | 左对齐 + 垂直居中 |
-| `banner` | 1280×640 | 2:1 | GitHub 仓库预览图 | 文本占左侧，右下水阶梯装饰 |
-| `slide` | 1920×1080 | 16:9 | 幻灯片封面 | 左对齐，宽幅留白 |
-| `square` | 1080×1080 | 1:1 | 社交方图、九宫格 | 全居中 |
+| `poster` | 1080×1440 | 3:4 | Xiaohongshu covers, portrait posters | Centered, title fills the width |
+| `card` | 1440×1080 | 4:3 | Article headers, slide artwork | Left-aligned, vertically centered |
+| `banner` | 1280×640 | 2:1 | GitHub repository preview | Text on the left, stair motif bottom-right |
+| `slide` | 1920×1080 | 16:9 | Slide covers | Left-aligned, generous whitespace |
+| `square` | 1080×1080 | 1:1 | Social avatars, grid posts | Fully centered |
 
 <table>
   <tr>
@@ -216,34 +236,37 @@ pixellogo -t "PIXEL" --open
   </tr>
 </table>
 
-常用别名：`xhs` / `xiaohongshu` / `red` / `3:4` → `poster`；`og` / `github` / `repo` / `social` / `2:1` → `banner`；`4:3` / `landscape` → `card`；`16:9` / `wide` → `slide`；`1:1` / `avatar` → `square`。
+Common aliases: `xhs` / `xiaohongshu` / `red` / `3:4` → `poster`; `og` / `github` / `repo` /
+`social` / `2:1` → `banner`; `4:3` / `landscape` → `card`; `16:9` / `wide` → `slide`;
+`1:1` / `avatar` → `square`.
 
-任何模式都可以用 `--size 宽x高` 覆盖；输出尺寸 = 逻辑尺寸 × `--scale`（默认 2）。
+Any mode can be overridden with `--size WIDTHxHEIGHT`; the output size is the logical size
+multiplied by `--scale` (default 2).
 
-### 输出格式与路径规则
+### Output formats and path rules
 
-| `-o` 传什么 | `-f` | 结果 |
+| `-o` receives | `-f` | Result |
 | --- | --- | --- |
-| 目录（`out/`） | `png` | `out/<标题>-<模式>.png` |
-| 目录（`out/`） | `svg` | `out/<标题>-<模式>.svg` |
-| 目录（`out/`） | `both` | 上面两个都产出 |
-| 文件（`cover.png`） | `png` | `cover.png` |
-| 文件（`cover.png`） | `both` | `cover.png` + `cover.svg` |
-| 文件（`cover.png`） | `svg` | `cover.svg`（格式由 `-f` 决定，主文件名沿用） |
+| A directory (`out/`) | `png` | `out/<title>-<mode>.png` |
+| A directory (`out/`) | `svg` | `out/<title>-<mode>.svg` |
+| A directory (`out/`) | `both` | Both of the above |
+| A file (`cover.png`) | `png` | `cover.png` |
+| A file (`cover.png`) | `both` | `cover.png` + `cover.svg` |
+| A file (`cover.png`) | `svg` | `cover.svg` (format comes from `-f`, stem is kept) |
 
-- 标题里的空格与非法字符会转成 `-`，中文字符保留。
-- 批量出图时同名文件自动加序号（`REA-poster-2.png`），不会互相覆盖。
-- `--scale` 是整数放大倍数，默认 2；`--scale 1` 得到与逻辑尺寸相同的输出。
+- Spaces and illegal characters in the title become `-`; CJK characters are preserved.
+- Batch runs never overwrite each other: duplicates get a suffix (`REA-poster-2.png`).
+- `--scale` is an integer upscale factor, default 2; `--scale 1` matches the logical size.
 
-### 内容字段
+### Content fields
 
-| 参数 | 说明 | 多行写法 |
+| Flag | Meaning | Multi-line |
 | --- | --- | --- |
-| `-t, --title` | 主标题，**必填** | 用 `\n` 分隔，或配置里写 `\n` |
-| `-s, --subtitle` | 副标题 | 重复传参，每次一行：`-s "A" -s "B"` |
-| `-d, --desc` | 底部说明文字 | 同上，`-d "A" -d "B"` |
-| `-e, --eyebrow` | 标题上方的小字标签 | 单行 |
-| `--badge` | 右上角方块徽标文字 | 单行 |
+| `-t, --title` | Main title, **required** | Separate with `\n`, or use `\n` in the config |
+| `-s, --subtitle` | Subtitle line | Repeat the flag, one line each: `-s "A" -s "B"` |
+| `-d, --desc` | Footer note line | Same as above: `-d "A" -d "B"` |
+| `-e, --eyebrow` | Small label above the title | Single line |
+| `--badge` | Badge text in the top-right corner | Single line |
 
 ```bash
 pixellogo \
@@ -254,65 +277,69 @@ pixellogo \
   -d "8-bit 风格图像生成器" -d "PNG / SVG 双格式输出"
 ```
 
-### 风格预设与配色
+### Style presets and colors
 
-| 预设 | 定位 | 底色 | 主色 | 强调色 |
+| Preset | Character | Background | Primary | Accent |
 | --- | --- | --- | --- | --- |
-| `terminal` | 复古终端（默认） | `#EEF1F6` | `#02ADFB` | `#FF6104` |
-| `cyber` | 暗夜赛博 | `#0D1117` | `#00E5A0` | `#FF3D81` |
-| `arcade` | 复古街机 | `#1B1F27` | `#FFD200` | `#FF5F1F` |
-| `candy` | 柔和糖果 | `#FFF5F7` | `#FF7EB6` | `#4ECDC4` |
-| `minimal` | 极简专业 | `#F8FAFC` | `#2563EB` | `#F97316` |
-| `noir` | 黑白纪实 | `#F4F4F5` | `#18181B` | `#E11D48` |
-| `forest` | 森林苔绿 | `#F0F4EF` | `#2F6B3C` | `#D97706` |
-| `sunset` | 黄昏日落 | `#2B1B2F` | `#FF8A3D` | `#FFD166` |
-| `ocean` | 深海青蓝 | `#E8F1F5` | `#0077B6` | `#2A9D8F` |
-| `paper` | 纸本手账 | `#F5EEE1` | `#8C3B2E` | `#C9822E` |
+| `terminal` | Retro terminal (default) | `#EEF1F6` | `#02ADFB` | `#FF6104` |
+| `cyber` | Neon cyber | `#0D1117` | `#00E5A0` | `#FF3D81` |
+| `arcade` | Retro arcade | `#1B1F27` | `#FFD200` | `#FF5F1F` |
+| `candy` | Soft candy | `#FFF5F7` | `#FF7EB6` | `#4ECDC4` |
+| `minimal` | Clean minimal | `#F8FAFC` | `#2563EB` | `#F97316` |
+| `noir` | Monochrome documentary | `#F4F4F5` | `#18181B` | `#E11D48` |
+| `forest` | Forest moss | `#F0F4EF` | `#2F6B3C` | `#D97706` |
+| `sunset` | Dusk sunset | `#2B1B2F` | `#FF8A3D` | `#FFD166` |
+| `ocean` | Deep ocean | `#E8F1F5` | `#0077B6` | `#2A9D8F` |
+| `paper` | Paper journal | `#F5EEE1` | `#8C3B2E` | `#C9822E` |
 
-`pixellogo --list presets` 会额外显示每套预设字色与底色的对比度。
+`pixellogo --list presets` additionally reports the text-on-background contrast ratio of
+each preset.
 
-单色覆盖（优先级高于预设，可只改其中一项）：
+Single-color overrides (higher priority than the preset, each one independent):
 
 ```bash
 --bg <HEX>  --fg <HEX>  --primary <HEX>  --accent <HEX>  --shadow-color <HEX>
 ```
 
-一个预设由六要素组成：底色、字色、主色（标题）、强调色（分隔线/徽标）、投影色，以及字体组合与投影强度。
+A preset has six ingredients: background, text color, primary (title), accent (divider and
+badge), shadow color, plus the font pairing and shadow strength.
 
-### 排版调节
+### Layout controls
 
-| 参数 | 取值 | 默认 | 作用 |
+| Flag | Values | Default | Effect |
 | --- | --- | --- | --- |
-| `--align` | `auto` / `left` / `center` | `auto` | 水平对齐；`auto` 跟随画布模式 |
-| `--vertical` | `auto` / `top` / `center` | `auto` | 内容块纵向锚定 |
-| `--margin` | 0–0.4 | `0.06` | 安全边距，相对画布短边 |
-| `--divider` | `line` / `dash` / `block` / `none` | 跟随预设 | 标题与说明之间的分隔线样式 |
-| `--divider-width` | 0.05–1.0 | `0.42` | 分隔线宽度占文本区比例 |
-| `--motif` | `auto` / `none` / `blocks` | `auto` | 右下角像素阶梯装饰（`banner` 默认开） |
-| `--title-size` | 像素 | 自动 | 显式指定标题字号，不做放大 |
-| `--tracking` | 0.5–1.5 | `1.0` | 字距倍率，`0.9` 更紧凑 |
-| `--leading` | 0.8–2.0 | `1.0` | 行高倍率 |
-| `--uppercase` | 开关 | 关 | 全部文字转大写 |
-| `--shadow-offset` | 0–4 | `1` | 标题投影格数，`0` 关闭 |
+| `--align` | `auto` / `left` / `center` | `auto` | Horizontal alignment; `auto` follows the canvas |
+| `--vertical` | `auto` / `top` / `center` | `auto` | Vertical anchoring of the content block |
+| `--margin` | 0–0.4 | `0.06` | Safe margin, relative to the short edge |
+| `--divider` | `line` / `dash` / `block` / `none` | from preset | Divider style between title and footnote |
+| `--divider-width` | 0.05–1.0 | `0.42` | Divider width as a share of the text area |
+| `--motif` | `auto` / `none` / `blocks` | `auto` | Pixel stair motif bottom-right (`banner` enables it) |
+| `--title-size` | pixels | auto | Explicit title size; no upscaling |
+| `--tracking` | 0.5–1.5 | `1.0` | Letter-spacing multiplier; `0.9` is tighter |
+| `--leading` | 0.8–2.0 | `1.0` | Line-height multiplier |
+| `--uppercase` | switch | off | Render all text in uppercase |
+| `--shadow-offset` | 0–4 | `1` | Title shadow depth in blocks; `0` disables |
 
-标题字号默认**双向自适应**：长标题自动收缩到文本区宽度以内，短标题自动放大到接近撑满，上限约画布高度的 42%。
+Title size auto-fits in both directions: long titles shrink to the text width, short titles
+grow until they nearly fill it, capped at about 42% of the canvas height.
 
 ```bash
 pixellogo -t "PIXEL" --tracking 0.88 --leading 1.2 --uppercase
 pixellogo -t "PIXEL" --align left --vertical top --divider dash
-pixellogo -t "PIXEL" --shadow-offset 0            # 纯扁平，无投影
+pixellogo -t "PIXEL" --shadow-offset 0            # flat, no shadow
 ```
 
-### 背景纹理
+### Background patterns
 
-| 取值 | 效果 | 说明 |
+| Value | Effect | Notes |
 | --- | --- | --- |
-| `none` | 纯色底 | 默认，符合「无纹理」风格不变式 |
-| `grid` | 方格纸 | 每格约画布短边的 1/20，1px 线条 |
-| `dots` | 点阵 | 网格交点上的小方块 |
-| `scanlines` | 扫描线 | 等距横向细线，CRT 观感 |
+| `none` | Solid background | Default, keeps the "no texture" style invariant |
+| `grid` | Graph paper | One cell per ~1/20 of the short edge, 1 px lines |
+| `dots` | Dot matrix | Small blocks at grid intersections |
+| `scanlines` | Scanlines | Evenly spaced horizontal lines, CRT look |
 
-纹理色由底色与字色按 10% 混合而成，仍是**纯色**，不引入透明度或渐变。
+The texture color is a 10% mix of background and text color, so it stays a **solid** color —
+no alpha, no gradients.
 
 ```bash
 pixellogo -t "GRID" -p forest --bg-pattern grid
@@ -328,54 +355,87 @@ pixellogo -t "SCANLINES" -p cyber --bg-pattern scanlines
   </tr>
 </table>
 
-上例分别用了 `forest`、`paper`、`cyber` 三套预设，可以看到纹理色会自动跟随配色（它由底色与字色混合而来，不是写死的灰）。
+The three samples above use `forest`, `paper` and `cyber`: the texture follows the palette
+instead of being a hard-coded gray.
 
-### 字体与语言
+### Fonts and glyph variants
 
-随包内置四款字体，安装后无需联网：
+Four fonts ship with the package, so no network access is needed after installation:
 
-| 字体 | 用途 | 覆盖 |
+| Font | Role | Coverage |
 | --- | --- | --- |
-| Press Start 2P | 主标题 | 拉丁 |
-| Silkscreen | 副标题 | 拉丁（无小写字形） |
-| Pixelify Sans | 说明文字 | 拉丁（支持大小写） |
-| Ark Pixel 12px Proportional | 简中 / 繁中 / 日文回退 | 汉字 + 假名 + 拉丁 |
-| Galmuri 11px | 韩文回退（按需下载） | 谚文 + 汉字 + 假名 + 拉丁 |
+| Press Start 2P | Titles | Latin |
+| Silkscreen | Subtitles | Latin (no lowercase glyphs) |
+| Pixelify Sans | Body text | Latin (upper and lower case) |
+| Ark Pixel 12px Proportional | Simplified / Traditional Chinese, Japanese fallback | Han, kana, Latin |
+| Galmuri 11px | Korean fallback (download on demand) | Hangul, Han, kana, Latin |
 
-**中英混排**时整行会切到中文像素字体（避免一行两种笔画粗细），并按字号自动加粗一档。
+With **mixed Latin and Chinese** text, the whole line switches to the Chinese pixel font
+(so one line never mixes two stroke weights) and gains one extra step of weight.
 
-**字形变体**：简体随包内置，繁中 / 日文 / 韩文按需下载到 `~/.pixellogo/fonts`。
+**Glyph variants**: Simplified Chinese ships in the box; Traditional Chinese, Japanese and
+Korean download on demand into `~/.pixellogo/fonts`.
 
 ```console
 $ pixellogo fonts
-zh-hans  随包内置     Ark Pixel 12px (zh-hans)
-zh-hant  已下载      Ark Pixel 12px (zh-hant)
-ja       已下载      Ark Pixel 12px (ja)
-ko       已下载      Galmuri 11px (ko)
+zh-hans  bundled          Ark Pixel 12px (zh-hans)
+zh-hant  downloaded       Ark Pixel 12px (zh-hant)
+ja       downloaded       Ark Pixel 12px (ja)
+ko       downloaded       Galmuri 11px (ko)
+
+Font directory: C:\Users\you\.pixellogo\fonts
+Install on demand: pixellogo fonts install <zh-hant|ja|ko>
 
 $ pixellogo fonts install ja
-下载 ja 字体包…
+Downloading the ja font pack (Ark Pixel 12px (ja))…
   https://github.com/TakWolf/ark-pixel-font/releases/download/2026.10.25/…
   100%  35MB / 35MB
-已安装：C:\Users\you\.pixellogo\fonts\ArkPixel-ja.ttf
+Installed: C:\Users\you\.pixellogo\fonts\ArkPixel-ja.ttf
 
 $ pixellogo -t "ピクセル" --lang ja
 ```
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/lang-ja.png" width="380"><br><code>--lang ja</code> 日文字形：片假名与汉字按日文标准字形渲染，标题自动加粗一档</td>
+    <td align="center"><img src="docs/images/lang-ja.png" width="380"><br><code>--lang ja</code> renders kana and kanji with Japanese glyph shapes, one weight bolder</td>
   </tr>
 </table>
 
-- `--lang` 可选 `zh-hans` / `zh-hant` / `ja` / `ko`，也接受 `zh-cn`、`zh-tw`、`jp`、`kr` 等写法。
-- 韩语走的是 [Galmuri](https://github.com/quiple/galmuri) 而不是 Ark Pixel——后者的 `ko` 版并不含谚文，
-  用它渲染韩文会得到一排豆腐块。
-- 内容里没有中日韩字符时，缺少对应字体不会报错。
-- 环境变量：`PIXELLOGO_FONT_DIR` 改字体目录，`PIXELLOGO_FONT_MIRROR` 指定下载镜像。
-- 换用任意像素字体：`--font-title /path/to/font.ttf`（同理 `--font-sub`、`--font-body`）。
+- `--lang` accepts `zh-hans` / `zh-hant` / `ja` / `ko`, plus spellings such as `zh-cn`,
+  `zh-tw`, `jp`, `kr`. It selects the **glyph variant**, not the interface language.
+- Korean uses [Galmuri](https://github.com/quiple/galmuri) rather than Ark Pixel: the `ko`
+  build of Ark Pixel contains no Hangul and would render a row of tofu boxes.
+- Missing fonts are not an error when the content has no CJK characters at all.
+- Environment variables: `PIXELLOGO_FONT_DIR` moves the font directory,
+  `PIXELLOGO_FONT_MIRROR` points downloads at a mirror.
+- Any pixel font works: `--font-title /path/to/font.ttf` (likewise `--font-sub`, `--font-body`).
 
-### 配置文件（JSONC）
+### Interface language
+
+All CLI text — help page, `--list` tables, `fonts` output, warnings and error messages — is
+available in English and Simplified Chinese.
+
+1. **Automatic.** The tool follows the terminal locale, checked in this order:
+   `LC_ALL` → `LC_MESSAGES` → `LANG` → `LANGUAGE`; on Windows, when no locale variable is
+   set, the system UI language is used. `C` / `POSIX` count as English, and anything that is
+   not Chinese falls back to English.
+2. **Explicit.** `--ui-lang auto|en|zh` overrides detection for one run, and the
+   `PIXELLOGO_UI_LANG` environment variable sets a persistent default. The flag wins over the
+   environment variable, which wins over the locale.
+
+```bash
+pixellogo --help                     # follows the terminal locale
+pixellogo --ui-lang en --help        # force English
+pixellogo --ui-lang zh --list modes  # Chinese list, regardless of locale
+
+PIXELLOGO_UI_LANG=en pixellogo --list presets   # persistent choice via environment
+```
+
+> `--ui-lang` changes the wording of the CLI; `--lang` changes the glyph variant used to
+> render the image. The two are independent: `--ui-lang en --lang ja` gives an English
+> interface with Japanese glyphs.
+
+### Config files (JSONC)
 
 ```jsonc
 // examples/og.jsonc
@@ -384,7 +444,7 @@ $ pixellogo -t "ピクセル" --lang ja
   "preset": "cyber",
 
   "title": "像素工具包",
-  "subtitle": "PIXEL LOGO TOOLKIT",     // 字符串或数组都行
+  "subtitle": "PIXEL LOGO TOOLKIT",     // string or array
   "desc": ["8-bit 风格图像生成器", "PNG / SVG 双格式输出"],
 
   "badge": "v0.1",
@@ -397,28 +457,28 @@ $ pixellogo -t "ピクセル" --lang ja
 
 ```bash
 pixellogo -c examples/og.jsonc
-pixellogo -c examples/og.jsonc -m card                    # 命令行覆盖 mode
+pixellogo -c examples/og.jsonc -m card                    # command line overrides mode
 pixellogo -c examples/og.jsonc --set colors.accent=#FF3D81
 ```
 
-全部可用键（与 `--dry-run` 输出的结构一致）：
+All available keys (identical to the `--dry-run` output structure):
 
-| 键 | 类型 | 说明 |
+| Key | Type | Meaning |
 | --- | --- | --- |
-| `mode` | 字符串 | 画布模式，默认 `poster` |
-| `size` | `"1200x900"` | 自定义画布，优先于 `mode` |
-| `preset` | 字符串 | 风格预设，默认 `terminal` |
-| `title` | 字符串 | 主标题，必填 |
-| `subtitle` / `desc` | 字符串或数组 | 每项一行 |
-| `eyebrow` / `badge` | 字符串 | 小字标签 / 右上角徽标 |
-| `lang` | 字符串 | 字形变体，默认 `zh-hans` |
-| `colors` | 对象 | `bg` `fg` `primary` `accent` `shadow` |
-| `fonts` | 对象 | `title` `sub` `body`（字体名或 .ttf 路径） |
-| `layout` | 对象 | `align` `vertical` `margin` `divider` `dividerWidth` `titleSize` `shadowOffset` `motif` `pattern` `tracking` `leading` `uppercase` `cjkBold` |
-| `output` | 对象 | `dir` / `path` / `scale` / `formats` |
-| `scale` / `out` / `format` | 顶层简写 | 等价于 `output` 里的对应项 |
+| `mode` | string | Canvas mode, default `poster` |
+| `size` | `"1200x900"` | Custom canvas, takes priority over `mode` |
+| `preset` | string | Style preset, default `terminal` |
+| `title` | string | Main title, required |
+| `subtitle` / `desc` | string or array | One entry per line |
+| `eyebrow` / `badge` | string | Small label / top-right badge |
+| `lang` | string | Glyph variant, default `zh-hans` |
+| `colors` | object | `bg` `fg` `primary` `accent` `shadow` |
+| `fonts` | object | `title` `sub` `body` (font name or .ttf path) |
+| `layout` | object | `align` `vertical` `margin` `divider` `dividerWidth` `titleSize` `shadowOffset` `motif` `pattern` `tracking` `leading` `uppercase` `cjkBold` |
+| `output` | object | `dir` / `path` / `scale` / `formats` |
+| `scale` / `out` / `format` | top-level shorthand | Equivalent to the matching key under `output` |
 
-顶层写成数组即为批量，一次出多张：
+A top-level array means batch mode — one config, many images:
 
 ```jsonc
 [
@@ -431,28 +491,29 @@ pixellogo -c examples/og.jsonc --set colors.accent=#FF3D81
 pixellogo -c examples/batch.jsonc -o out/ -f png --json
 ```
 
-编辑器补全：在配置里加 `"$schema"` 指向 `src/pixellogo/schema/pixellogo.schema.json`（或已安装包内的同名文件）。
+Editor completion: add `"$schema"` pointing at
+`src/pixellogo/schema/pixellogo.schema.json` (or the same file inside an installed package).
 
 ### Python API
 
 ```python
 from pixellogo import render, render_many, make_image, make_scene, to_svg_text
 
-# 写盘，返回生成的文件路径
+# Write files, returns the generated paths
 paths = render(title="REA", mode="banner", preset="cyber", format="png", out="out/")
 
-# 只要 Pillow 位图（不落盘）
+# Pillow bitmap only (nothing written)
 image = make_image(title="REA", mode="square", scale=1)
 image.save("preview.png")
 
-# 只要几何（可自行检查色板、边界）
+# Geometry only (inspect palette or bounds yourself)
 scene = make_scene(title="REA", mode="poster")
 print(scene.width, scene.height, len(scene.rects), scene.colors)
 
-# 只要 SVG 源码
+# SVG source only
 svg = to_svg_text(title="REA", mode="slide")
 
-# 批量
+# Batch
 render_many(
     [{"title": "A", "mode": "poster"}, {"title": "B", "mode": "square"}],
     out="out",
@@ -460,7 +521,7 @@ render_many(
 )
 ```
 
-参数键与 JSONC 配置完全一致，配置里能写的 API 都能写，例如：
+Keyword names match the JSONC keys exactly, so anything valid in a config is valid here:
 
 ```python
 render(
@@ -472,24 +533,25 @@ render(
 )
 ```
 
-### 辅助开关与退出码
+### Flags and exit codes
 
-| 参数 | 作用 |
+| Flag | Effect |
 | --- | --- |
-| `-h, --help` | 打印帮助（裸执行 `pixellogo` 或 `pixellogo help` 同理） |
-| `-V, --version` | 打印版本 |
-| `--list modes` / `presets` / `fonts` | 列出可选项 |
-| `--dry-run` | 打印合并后的配置，不渲染 |
-| `--json` | 以 JSON 输出结果，便于脚本消费 |
-| `--open` | 生成后用系统默认程序打开第一张图 |
-| `-c, --config` | 指定 JSONC 配置文件 |
-| `--set KEY=VALUE` | 点路径覆盖，可重复 |
+| `-h, --help` | Print help (bare `pixellogo` and `pixellogo help` do the same) |
+| `-V, --version` | Print the version |
+| `--ui-lang auto\|en\|zh` | Output language of the CLI itself |
+| `--list modes` / `presets` / `fonts` | List the available options |
+| `--dry-run` | Print the merged configuration, do not render |
+| `--json` | Emit JSON results for scripting |
+| `--open` | Open the first image with the system default application |
+| `-c, --config` | JSONC config file |
+| `--set KEY=VALUE` | Dot-path override, repeatable |
 
-退出码：`0` 成功，`2` 参数或配置有误（错误信息写到 stderr）。
+Exit codes: `0` success, `2` invalid arguments or configuration (error text goes to stderr).
 
 ---
 
-## 预设画廊
+## Preset gallery
 
 <table>
   <tr>
@@ -514,12 +576,14 @@ render(
   </tr>
 </table>
 
-想看完整用法组合——不同画布 × 预设 × 背景纹理，以及日语 / 韩语 / 繁体中文的在地文化示例，
-共 40 张成品与逐条命令：**[命令示例画廊 →](docs/gallery.md)**
+For the full set of combinations — canvases × presets × textures, plus localized Japanese /
+Korean / Traditional Chinese examples — see the
+**[command gallery →](docs/gallery.md)** (40 samples, each with its exact command;
+currently written in Chinese).
 
 ---
 
-## 开发与测试
+## Development and tests
 
 ```bash
 git clone https://github.com/sogeisetsu/pixel-logo-toolkit.git
@@ -531,50 +595,58 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 ```
 src/pixellogo/
-├─ cli.py       命令行入口与参数解析
-├─ api.py       Python API
-├─ config.py    四层配置合并与校验
-├─ jsonc.py     JSONC 解析（注释 / 尾逗号）
-├─ text.py      文字 → 掩膜 → 矩形
-├─ layout.py    行栈排版、投影、装饰与背景纹理
-├─ modes.py     画布规格
-├─ presets.py   风格预设与对比度计算
-├─ fonts.py     字体注册、字形覆盖检测、语言变体
-├─ fontpack.py  多语言字体包按需下载
-├─ paths.py     输出命名规则
-├─ scene.py     图元模型
-└─ render/      SVG 与 PNG 两个后端
+├─ cli.py        Command line entry point and argument parsing
+├─ api.py        Python API
+├─ config.py     Four-layer config merge and validation
+├─ i18n.py       Bilingual CLI text, locale detection
+├─ jsonc.py      JSONC parsing (comments / trailing commas)
+├─ text.py       Text → mask → rectangles
+├─ layout.py     Line stack layout, shadow, motif and background patterns
+├─ modes.py      Canvas specifications
+├─ presets.py    Style presets and contrast math
+├─ fonts.py      Font registry, glyph coverage checks, language variants
+├─ fontpack.py   On-demand multilingual font packs
+├─ paths.py      Output naming rules
+├─ scene.py      Primitive model
+└─ render/       SVG and PNG backends
 ```
 
-风格规格与不变式清单见 [`docs/style-spec.md`](docs/style-spec.md)，设计与实现记录见 [`docs/design.md`](docs/design.md)。
+Style invariants are listed in [`docs/style-spec.md`](docs/style-spec.md); design and
+implementation notes are in [`docs/design.md`](docs/design.md) (both in Chinese).
 
 ---
 
-## 常见问题
+## FAQ
 
-**标题被缩得太小？**
-标题宽度受模式与文本区比例限制。换更宽的画布（`-m slide`）、调小 `--margin`，或用 `--title-size` 直接指定字号。
+**The title came out too small.**
+Title width is limited by the canvas mode and the text-area ratio. Use a wider canvas
+(`-m slide`), reduce `--margin`, or set the size explicitly with `--title-size`.
 
-**提示 `pixellogo: command not found`？**
-说明还没安装，只克隆了源码。在仓库目录执行 `pip install .`（或 `pip install -e .` 开发模式、`pipx install .`）后重开终端。
-仍找不到的话，检查 Python 的脚本目录是否在 `PATH` 里：Windows 是 `<Python 安装目录>\Scripts`，macOS / Linux 通常是 `~/.local/bin`。
-临时不安装：`PYTHONPATH=src python -m pixellogo -t "REA"`。
+**`pixellogo: command not found`.**
+The package is not installed — cloning the repository is not enough. Run `pip install .`
+(or `pip install -e .` for development, `pipx install .`) in the repository, then reopen the
+terminal. If it still fails, check that Python's script directory is on `PATH`: on Windows
+that is `<python>\Scripts`, on macOS / Linux usually `~/.local/bin`. To skip installation:
+`PYTHONPATH=src python -m pixellogo -t "REA"`.
 
-**中文出现方块或缺字？**
-默认内置简体字体；若标题是繁体、日文或韩文，先 `pixellogo fonts install <lang>` 并加 `--lang`。
+**Chinese characters render as boxes or are missing.**
+Simplified Chinese ships by default. For Traditional Chinese, Japanese or Korean run
+`pixellogo fonts install <lang>` and pass `--lang` accordingly.
 
-**PNG 边缘会有灰边吗？**
-不会。渲染全程按整数矩形填充，不经过任何插值缩放。
+**Will PNG edges have gray fringes?**
+No. Rendering fills integer rectangles only and never resamples with interpolation.
 
-**能改背景为图片吗？**
-不能，风格不变式要求纯色底。可以用 `--bg-pattern` 换成方格、点阵或扫描线。
+**Can the background be an image?**
+No — the style invariants require a solid background. Use `--bg-pattern` for graph paper,
+dots or scanlines instead.
 
-**怎么设置 GitHub 仓库预览图？**
-生成 `banner` 模式的图（1280×640），到仓库 Settings → Social preview 手动上传。
+**How do I set the GitHub social preview?**
+Generate a `banner` image (1280×640) and upload it under Settings → Social preview.
 
 ---
 
-## 许可
+## License
 
-代码以 [MIT](LICENSE) 发布。
-内置字体遵循 SIL Open Font License 1.1，许可原文见 [`src/pixellogo/assets/licenses/`](src/pixellogo/assets/licenses/)。
+Code is released under the [MIT license](LICENSE).
+Bundled fonts follow the SIL Open Font License 1.1; the original texts live in
+[`src/pixellogo/assets/licenses/`](src/pixellogo/assets/licenses/).
