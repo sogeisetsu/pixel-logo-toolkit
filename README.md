@@ -312,8 +312,20 @@ pixellogo -t "PIXEL" --shadow-offset 0            # 纯扁平，无投影
 纹理色由底色与字色按 10% 混合而成，仍是**纯色**，不引入透明度或渐变。
 
 ```bash
-pixellogo -t "PIXEL" --bg-pattern grid -p minimal
+pixellogo -t "GRID" -p forest --bg-pattern grid
+pixellogo -t "DOTS" -p paper --bg-pattern dots
+pixellogo -t "SCANLINES" -p cyber --bg-pattern scanlines
 ```
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/pattern-grid.png" width="240"><br><code>--bg-pattern grid</code></td>
+    <td align="center"><img src="docs/images/pattern-dots.png" width="240"><br><code>--bg-pattern dots</code></td>
+    <td align="center"><img src="docs/images/pattern-scanlines.png" width="240"><br><code>--bg-pattern scanlines</code></td>
+  </tr>
+</table>
+
+上例分别用了 `forest`、`paper`、`cyber` 三套预设，可以看到纹理色会自动跟随配色（它由底色与字色混合而来，不是写死的灰）。
 
 ### 字体与语言
 
@@ -345,6 +357,12 @@ $ pixellogo fonts install ja
 
 $ pixellogo -t "ピクセル" --lang ja
 ```
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/lang-ja.png" width="380"><br><code>--lang ja</code> 日文字形：片假名与汉字按日文标准字形渲染，标题自动加粗一档</td>
+  </tr>
+</table>
 
 - `--lang` 可选 `zh-hans` / `zh-hant` / `ja` / `ko`，也接受 `zh-cn`、`zh-tw`、`jp`、`kr` 等写法。
 - 内容里没有中日韩字符时，缺少对应字体不会报错。
