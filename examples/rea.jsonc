@@ -1,0 +1,22 @@
+// 小红书封面：3:4，1080×1440
+// 用法：pixellogo -c examples/rea.jsonc
+{
+  "mode": "xhs",
+  "preset": "terminal",
+
+  "title": "REA",
+  "subtitle": ["REVERSE ENGINEER", "ANYTHING"],
+  "desc": [
+    "One CLI + MCP server for agents",
+    "From binaries to websites",
+  ],
+
+  "layout": {
+    "align": "center",
+    "divider": "line",
+  },
+
+  "output": {
+    "dir": "out",
+  },
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "pixellogo 配置",
+  "description": "pixellogo 的配置文件格式（JSONC：支持注释与尾逗号）。顶层也可写成数组以批量出图。",
+  "type": "object",
+  "required": ["title"],
+  "additionalProperties": false,
+  "properties": {
+    "mode": {
+      "description": "画布模式",
+      "enum": ["xhs", "4:3", "og", "github", "repo", "xiaohongshu"]
+    },
+    "size": {
+      "description": "自定义画布，如 1200x900（写了 size 就忽略 mode）",
+      "type": "string",
+      "pattern": "^[0-9]+(x|X|\\*)[0-9]+$"
+    },
+    "preset": {
+      "description": "风格预设",
+      "enum": ["terminal", "cyber", "arcade", "candy", "minimal"]
+    },
+    "title": {
+      "description": "主标题，用 \\n 分行",
+      "type": "string",
+      "minLength": 1
+    },
+    "subtitle": {
+      "description": "副标题，字符串或字符串数组，每项一行",
+      "$ref": "#/definitions/textLines"
+    },
+    "desc": {
+      "description": "底部说明文字",
+      "$ref": "#/definitions/textLines"
+    },
+    "eyebrow": {
+      "description": "标题上方的小字标签",
+      "type": "string"
+    },
+    "badge": {
+      "description": "右上角徽标文字",
+      "type": "string"
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bg": { "$ref": "#/definitions/hexColor" },
+        "fg": { "$ref": "#/definitions/hexColor" },
+        "primary": { "$ref": "#/definitions/hexColor" },
+        "accent": { "$ref": "#/definitions/hexColor" },
+        "shadow": { "$ref": "#/definitions/hexColor" }
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "sub": { "type": "string" },
+        "body": { "type": "string" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "align": { "enum": ["auto", "left", "center"] },
+        "vertical": { "enum": ["auto", "top", "center"] },
+        "margin": { "type": "number", "minimum": 0, "exclusiveMaximum": 0.4 },
+        "divider": { "enum": ["auto", "line", "dash", "block", "none"] },
+        "dividerWidth": { "type": "number", "minimum": 0.05, "maximum": 1 },
+        "titleSize": { "type": "integer", "minimum": 8 },
+        "shadowOffset": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "motif": { "enum": ["auto", "none", "blocks"] },
+        "cjkBold": { "type": "number", "minimum": 0, "maximum": 0.06 }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dir": { "type": "string" },
+        "path": { "type": "string" },
+        "scale": { "type": "integer", "minimum": 1, "maximum": 8 }
+      }
+    },
+    "scale": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "out": { "type": "string" }
+  },
+  "definitions": {
+    "textLines": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+    }
+  }
+}
