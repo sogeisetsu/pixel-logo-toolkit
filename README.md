@@ -336,7 +336,8 @@ pixellogo -t "SCANLINES" -p cyber --bg-pattern scanlines
 | Press Start 2P | 主标题 | 拉丁 |
 | Silkscreen | 副标题 | 拉丁（无小写字形） |
 | Pixelify Sans | 说明文字 | 拉丁（支持大小写） |
-| Ark Pixel 12px Proportional | 中日韩回退 | 中日韩 + 拉丁 |
+| Ark Pixel 12px Proportional | 简中 / 繁中 / 日文回退 | 汉字 + 假名 + 拉丁 |
+| Galmuri 11px | 韩文回退（按需下载） | 谚文 + 汉字 + 假名 + 拉丁 |
 
 **中英混排**时整行会切到中文像素字体（避免一行两种笔画粗细），并按字号自动加粗一档。
 
@@ -344,10 +345,10 @@ pixellogo -t "SCANLINES" -p cyber --bg-pattern scanlines
 
 ```console
 $ pixellogo fonts
-zh-hans  随包内置
-zh-hant  未安装
-ja       未安装
-ko       未安装
+zh-hans  随包内置     Ark Pixel 12px (zh-hans)
+zh-hant  已下载      Ark Pixel 12px (zh-hant)
+ja       已下载      Ark Pixel 12px (ja)
+ko       已下载      Galmuri 11px (ko)
 
 $ pixellogo fonts install ja
 下载 ja 字体包…
@@ -365,6 +366,8 @@ $ pixellogo -t "ピクセル" --lang ja
 </table>
 
 - `--lang` 可选 `zh-hans` / `zh-hant` / `ja` / `ko`，也接受 `zh-cn`、`zh-tw`、`jp`、`kr` 等写法。
+- 韩语走的是 [Galmuri](https://github.com/quiple/galmuri) 而不是 Ark Pixel——后者的 `ko` 版并不含谚文，
+  用它渲染韩文会得到一排豆腐块。
 - 内容里没有中日韩字符时，缺少对应字体不会报错。
 - 环境变量：`PIXELLOGO_FONT_DIR` 改字体目录，`PIXELLOGO_FONT_MIRROR` 指定下载镜像。
 - 换用任意像素字体：`--font-title /path/to/font.ttf`（同理 `--font-sub`、`--font-body`）。

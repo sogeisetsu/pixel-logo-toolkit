@@ -67,12 +67,38 @@ BUILTIN_FONTS: dict[str, FontSpec] = {
 
 DEFAULT_CJK_FALLBACK = "ark-pixel"
 
-#: 中文回退字体支持的语言变体：语言 → (本地文件名, 发行包内文件名)
-CJK_VARIANTS: dict[str, tuple[str, str]] = {
-    "zh-hans": ("ArkPixel-zh-hans.ttf", "ark-pixel-12px-proportional-zh_hans.ttf"),
-    "zh-hant": ("ArkPixel-zh-hant.ttf", "ark-pixel-12px-proportional-zh_hant.ttf"),
-    "ja": ("ArkPixel-ja.ttf", "ark-pixel-12px-proportional-ja.ttf"),
-    "ko": ("ArkPixel-ko.ttf", "ark-pixel-12px-proportional-ko.ttf"),
+ARK_TAG = "2026.10.25"
+ARK_ARCHIVE = f"ark-pixel-font-12px-proportional-ttf-v{ARK_TAG}.zip"
+ARK_URL = ("https://github.com/TakWolf/ark-pixel-font/releases/download/"
+           f"{ARK_TAG}/{ARK_ARCHIVE}")
+
+GALMURI_TAG = "v2.40.4"
+GALMURI_ARCHIVE = f"Galmuri-{GALMURI_TAG}.zip"
+GALMURI_URL = ("https://github.com/quiple/galmuri/releases/download/"
+               f"{GALMURI_TAG}/{GALMURI_ARCHIVE}")
+
+
+@dataclass(frozen=True)
+class Variant:
+    """一个语言字形变体的来源信息。"""
+
+    filename: str    # 落地后的文件名
+    member: str      # 压缩包内路径
+    archive: str     # 压缩包文件名
+    url: str         # 下载地址
+    label: str       # 展示名
+
+
+#: 中日韩字形变体。注意：Ark Pixel 的 ko 版并不含谚文，韩语改用 Galmuri。
+CJK_VARIANTS: dict[str, Variant] = {
+    "zh-hans": Variant("ArkPixel-zh-hans.ttf", "ark-pixel-12px-proportional-zh_hans.ttf",
+                       ARK_ARCHIVE, ARK_URL, "Ark Pixel 12px (zh-hans)"),
+    "zh-hant": Variant("ArkPixel-zh-hant.ttf", "ark-pixel-12px-proportional-zh_hant.ttf",
+                       ARK_ARCHIVE, ARK_URL, "Ark Pixel 12px (zh-hant)"),
+    "ja": Variant("ArkPixel-ja.ttf", "ark-pixel-12px-proportional-ja.ttf",
+                  ARK_ARCHIVE, ARK_URL, "Ark Pixel 12px (ja)"),
+    "ko": Variant("Galmuri11.ttf", "Galmuri11.ttf",
+                  GALMURI_ARCHIVE, GALMURI_URL, "Galmuri 11px (ko)"),
 }
 
 CJK_ALIASES = {
@@ -114,7 +140,7 @@ def normalize_lang(lang: str) -> str:
 def cjk_font_path(lang: str = DEFAULT_LANG) -> str:
     """返回某语言变体的字体路径；未安装时抛出带安装提示的错误。"""
     key = normalize_lang(lang)
-    filename = CJK_VARIANTS[key][0]
+    filename = CJK_VARIANTS[key].filename
     bundled = FONT_DIR / filename
     if bundled.is_file():
         return str(bundled)
@@ -127,16 +153,16 @@ def cjk_font_path(lang: str = DEFAULT_LANG) -> str:
     )
 
 
-def variant_status() -> list[tuple[str, str]]:
-    """列出各语言变体的状态：bundled / installed / missing。"""
-    rows: list[tuple[str, str]] = []
-    for key, (filename, _) in CJK_VARIANTS.items():
-        if (FONT_DIR / filename).is_file():
-            rows.append((key, "bundled"))
-        elif (font_cache_dir() / filename).is_file():
-            rows.append((key, "installed"))
+def variant_status() -> list[tuple[str, str, str]]:
+    """列出各语言变体的 (语言, 状态, 字体名)：bundled / installed / missing。"""
+    rows: list[tuple[str, str, str]] = []
+    for key, variant in CJK_VARIANTS.items():
+        if (FONT_DIR / variant.filename).is_file():
+            rows.append((key, "bundled", variant.label))
+        elif (font_cache_dir() / variant.filename).is_file():
+            rows.append((key, "installed", variant.label))
         else:
-            rows.append((key, "missing"))
+            rows.append((key, "missing", variant.label))
     return rows
 
 

@@ -101,10 +101,17 @@ class TestLanguageVariants(unittest.TestCase):
         self.assertEqual(fonts.cjk_font_path("ja"), target)
 
     def test_variant_status_lists_all(self):
-        status = dict(fonts.variant_status())
+        status = {key: state for key, state, _label in fonts.variant_status()}
         self.assertEqual(status["zh-hans"], "bundled")
         self.assertIn("ja", status)
         self.assertIn("ko", status)
+
+    def test_korean_variant_uses_hangul_font(self):
+        # Ark Pixel 的 ko 版没有谚文，韩语必须走 Galmuri
+        self.assertEqual(fonts.CJK_VARIANTS["ko"].filename, "Galmuri11.ttf")
+        license_path = fonts.LICENSE_DIR / "OFL-Galmuri.txt"
+        self.assertTrue(license_path.is_file())
+        self.assertIn("SIL OPEN FONT LICENSE", license_path.read_text(encoding="utf-8").upper())
 
 
 if __name__ == "__main__":
