@@ -91,7 +91,9 @@ def _cmd_list(kind: str) -> int:
 
     if kind == "presets":
         for preset in presets.list_presets():
-            print(f"{preset.key:<10} {preset.label:<16} 底色 {preset.bg}  主色 {preset.primary}")
+            ratio = presets.contrast_ratio(preset.fg, preset.bg)
+            print(f"{preset.key:<10} {preset.label:<10} 底 {preset.bg} 主 {preset.primary} "
+                  f"强调 {preset.accent} 对比度 {ratio:>4.1f}")
     elif kind == "modes":
         for mode in modes.list_modes():
             w, h = mode.output_size

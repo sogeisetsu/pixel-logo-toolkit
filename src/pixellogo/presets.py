@@ -95,9 +95,100 @@ PRESETS: dict[str, Preset] = {
         shadow_ratio=0.04,
         divider="line",
     ),
+    "noir": Preset(
+        key="noir",
+        label="黑白纪实",
+        bg="#F4F4F5",
+        fg="#18181B",
+        primary="#18181B",
+        accent="#E11D48",
+        shadow="#A1A1AA",
+        title_font="press-start-2p",
+        sub_font="silkscreen",
+        body_font="pixelify",
+        shadow_ratio=0.05,
+        divider="line",
+    ),
+    "forest": Preset(
+        key="forest",
+        label="森林苔绿",
+        bg="#F0F4EF",
+        fg="#1C2B21",
+        primary="#2F6B3C",
+        accent="#D97706",
+        shadow="#22382A",
+        title_font="press-start-2p",
+        sub_font="silkscreen",
+        body_font="pixelify",
+        shadow_ratio=0.05,
+        divider="line",
+    ),
+    "sunset": Preset(
+        key="sunset",
+        label="黄昏日落",
+        bg="#2B1B2F",
+        fg="#FFE8D6",
+        primary="#FF8A3D",
+        accent="#FFD166",
+        shadow="#14060F",
+        title_font="press-start-2p",
+        sub_font="silkscreen",
+        body_font="pixelify",
+        shadow_ratio=0.07,
+        divider="line",
+        dark=True,
+    ),
+    "ocean": Preset(
+        key="ocean",
+        label="深海青蓝",
+        bg="#E8F1F5",
+        fg="#0B2E3F",
+        primary="#0077B6",
+        accent="#2A9D8F",
+        shadow="#06324A",
+        title_font="press-start-2p",
+        sub_font="silkscreen",
+        body_font="pixelify",
+        shadow_ratio=0.05,
+        divider="line",
+    ),
+    "paper": Preset(
+        key="paper",
+        label="纸本手账",
+        bg="#F5EEE1",
+        fg="#33291D",
+        primary="#8C3B2E",
+        accent="#C9822E",
+        shadow="#8A7457",
+        title_font="press-start-2p",
+        sub_font="silkscreen",
+        body_font="pixelify",
+        shadow_ratio=0.045,
+        divider="dash",
+    ),
 }
 
 DEFAULT_PRESET = "terminal"
+
+
+def _luminance(color: str) -> float:
+    """WCAG 相对亮度，用于自检字色与底色的对比度。"""
+    value = color.lstrip("#")
+    if len(value) == 3:
+        value = "".join(char * 2 for char in value)
+    channels = []
+    for index in (0, 2, 4):
+        raw = int(value[index:index + 2], 16) / 255
+        channels.append(raw / 12.92 if raw <= 0.03928 else ((raw + 0.055) / 1.055) ** 2.4)
+    red, green, blue = channels
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+
+
+def contrast_ratio(first: str, second: str) -> float:
+    """两个色值的对比度（1–21）。"""
+    a, b = _luminance(first), _luminance(second)
+    high, low = max(a, b), min(a, b)
+    return (high + 0.05) / (low + 0.05)
 
 
 def get_preset(key: str) -> Preset:
