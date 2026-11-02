@@ -14,6 +14,10 @@ from pixellogo.presets import Preset
 from pixellogo.scene import Rect, Scene
 
 
+#: 需要右侧装饰时，留给装饰的宽度占内容区的比例
+MOTIF_RESERVE = 0.26
+
+
 @dataclass
 class Design:
     """一次渲染的完整输入（已解析、已合并默认值）。"""
@@ -223,12 +227,13 @@ def _draw_motif(scene: Scene, design: Design, palette: dict[str, str],
     area_x = margin + text_w + margin // 2
     area_w = margin + content_w - area_x
     # 右下角三级像素阶梯，贴着右边距收口
-    unit = int(min(area_w / 2.4, design.mode.height * 0.15))
+    unit = int(min(area_w / 2.4, design.mode.height * 0.13))
     if unit < 10:
         return
     right = margin + content_w
     bottom = design.mode.height - margin
-    colors = [palette["shadow"], palette["primary"], palette["accent"]]
+    # 用与底色有保证对比度的三种颜色，深色预设上投影色几乎看不见
+    colors = [palette["primary"], palette["accent"], palette["fg"]]
     for index, color in enumerate(colors):
         x = right - (3 - index) * unit
         y = bottom - (index + 1) * unit
@@ -245,6 +250,11 @@ def build_scene(design: Design) -> Scene:
     margin = max(6, int(round(min(mode.width, mode.height) * design.margin)))
     content_w = mode.width - margin * 2
     text_w = max(40, int(round(content_w * mode.text_ratio)))
+    # 显式要求右侧装饰时，从文本区里让出位置，否则窄画布上装饰会被挤掉
+    wants_motif = (design.motif == "blocks"
+                   or (design.motif == "auto" and mode.motif == "blocks"))
+    if wants_motif:
+        text_w = min(text_w, max(40, content_w - int(round(content_w * MOTIF_RESERVE))))
     align = design.align if design.align != "auto" else mode.align
     vertical = design.vertical if design.vertical != "auto" else mode.vertical
     divider = design.divider if design.divider != "auto" else design.preset.divider
