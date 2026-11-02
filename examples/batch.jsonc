@@ -2,21 +2,21 @@
 // 用法：pixellogo -c examples/batch.jsonc -o out/
 [
   {
-    "mode": "xhs",
+    "mode": "poster",
     "preset": "terminal",
     "title": "REA",
     "subtitle": ["REVERSE ENGINEER", "ANYTHING"],
     "desc": ["One CLI + MCP server for agents"],
   },
   {
-    "mode": "4:3",
+    "mode": "card",
     "preset": "arcade",
     "title": "DEV",
     "subtitle": "BUILD FASTER",
     "desc": ["Agent-native tooling for modern teams"],
   },
   {
-    "mode": "og",
+    "mode": "banner",
     "preset": "minimal",
     "title": "CLI",
     "subtitle": "PIXELLOGO 0.1",

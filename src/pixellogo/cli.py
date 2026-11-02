@@ -66,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     out = parser.add_argument_group("输出")
     out.add_argument("-m", "--mode", default=None, metavar="MODE",
-                     help="画布模式：xhs / 4:3 / og（默认 xhs）")
+                     help="画布模式：poster / card / banner / slide / square（默认 poster）")
     out.add_argument("--size", metavar="WxH", help="自定义画布，如 1200x900")
     out.add_argument("--scale", type=int, default=None, metavar="N", help="输出放大倍数（默认 2）")
     out.add_argument("-f", "--format", choices=["png", "svg", "both"], default=None,
@@ -95,7 +95,7 @@ def _cmd_list(kind: str) -> int:
     elif kind == "modes":
         for mode in modes.list_modes():
             w, h = mode.output_size
-            print(f"{mode.key:<8} {mode.label:<34} 输出 {w}×{h}")
+            print(f"{mode.key:<8} {mode.ratio:>5}  {mode.label:<32} 输出 {w}×{h}")
     else:
         for spec in fonts.list_fonts():
             print(f"{spec.key:<16} {spec.label:<42} {spec.coverage}")

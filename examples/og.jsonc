@@ -1,7 +1,7 @@
 // GitHub 仓库预览图：2:1，1280×640
 // 用法：pixellogo -c examples/og.jsonc
 {
-  "mode": "og",
+  "mode": "banner",
   "preset": "cyber",
 
   "title": "像素工具包",

@@ -10,7 +10,7 @@ from pixellogo import modes, presets  # noqa: E402
 from pixellogo.layout import Design, build_scene  # noqa: E402
 
 
-def make(mode_key="xhs", **kwargs):
+def make(mode_key="poster", **kwargs):
     mode = modes.get_mode(mode_key)
     preset = presets.get_preset(kwargs.pop("preset_key", "terminal"))
     return build_scene(Design(title=kwargs.pop("title", "REA"), preset=preset,
@@ -19,18 +19,32 @@ def make(mode_key="xhs", **kwargs):
 
 class TestModes(unittest.TestCase):
     def test_output_sizes(self):
-        self.assertEqual(modes.get_mode("xhs").output_size, (1080, 1440))
-        self.assertEqual(modes.get_mode("4:3").output_size, (1440, 1080))
-        self.assertEqual(modes.get_mode("og").output_size, (1280, 640))
+        self.assertEqual(modes.get_mode("poster").output_size, (1080, 1440))
+        self.assertEqual(modes.get_mode("card").output_size, (1440, 1080))
+        self.assertEqual(modes.get_mode("banner").output_size, (1280, 640))
+        self.assertEqual(modes.get_mode("slide").output_size, (1920, 1080))
+        self.assertEqual(modes.get_mode("square").output_size, (1080, 1080))
 
-    def test_aliases(self):
-        self.assertEqual(modes.get_mode("github").key, "og")
-        self.assertEqual(modes.get_mode("xiaohongshu").key, "xhs")
-        self.assertEqual(modes.get_mode("4x3").key, "4:3")
+    def test_mode_names_are_semantic_words(self):
+        for mode in modes.list_modes():
+            self.assertRegex(mode.key, r"^[a-z]+$")
+            self.assertNotIn(":", mode.key)
+
+    def test_ratio_display(self):
+        self.assertEqual(modes.get_mode("slide").ratio, "16:9")
+        self.assertEqual(modes.get_mode("square").ratio, "1:1")
+
+    def test_legacy_aliases_still_work(self):
+        self.assertEqual(modes.get_mode("xhs").key, "poster")
+        self.assertEqual(modes.get_mode("og").key, "banner")
+        self.assertEqual(modes.get_mode("4:3").key, "card")
+        self.assertEqual(modes.get_mode("16:9").key, "slide")
+        self.assertEqual(modes.get_mode("1:1").key, "square")
+        self.assertEqual(modes.get_mode("github").key, "banner")
 
     def test_unknown_mode(self):
         with self.assertRaises(ValueError):
-            modes.get_mode("square")
+            modes.get_mode("hexagon")
 
     def test_custom_mode(self):
         mode = modes.custom_mode(1200, 900)
@@ -39,14 +53,14 @@ class TestModes(unittest.TestCase):
 
 class TestLayout(unittest.TestCase):
     def test_every_mode_fills_canvas_with_background(self):
-        for key in ("xhs", "4:3", "og"):
+        for key in ("poster", "card", "banner", "slide", "square"):
             scene = make(key, subtitle=["LINE ONE"], desc=["footnote"])
             self.assertEqual((scene.width, scene.height),
                              (modes.get_mode(key).width, modes.get_mode(key).height))
             self.assertTrue(scene.rects)
 
     def test_rects_stay_inside_canvas(self):
-        for key in ("xhs", "4:3", "og"):
+        for key in ("poster", "card", "banner", "slide", "square"):
             scene = make(key, subtitle=["SUB"], desc=["DESC"])
             for rect in scene.rects:
                 self.assertGreaterEqual(rect.x, 0, key)
@@ -59,13 +73,13 @@ class TestLayout(unittest.TestCase):
         self.assertLessEqual(len(scene.colors), 5)
 
     def test_long_title_shrinks_within_content_width(self):
-        tight = make("og", title="A VERY LONG TITLE THAT MUST SHRINK")
-        short = make("og", title="AB")
+        tight = make("banner", title="A VERY LONG TITLE THAT MUST SHRINK")
+        short = make("banner", title="AB")
         self.assertGreater(len(tight.rects), 0)
         self.assertGreater(len(short.rects), 0)
 
     def test_cjk_title_renders(self):
-        scene = make("xhs", title="像素工具包", subtitle=["中文副标题"])
+        scene = make("poster", title="像素工具包", subtitle=["中文副标题"])
         self.assertGreater(len(scene.rects), 100)
 
     def test_shadow_can_be_disabled(self):

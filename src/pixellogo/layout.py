@@ -197,7 +197,7 @@ def build_scene(design: Design) -> Scene:
     margin = max(6, int(round(min(mode.width, mode.height) * design.margin)))
     content_w = mode.width - margin * 2
     text_w = max(40, int(round(content_w * mode.text_ratio)))
-    align = design.align if design.align != "auto" else ("center" if mode.key == "xhs" else "left")
+    align = design.align if design.align != "auto" else mode.align
     vertical = design.vertical if design.vertical != "auto" else mode.vertical
     divider = design.divider if design.divider != "auto" else design.preset.divider
 
