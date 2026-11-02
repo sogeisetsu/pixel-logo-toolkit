@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -9,16 +10,6 @@ from pathlib import Path
 from pixellogo import __version__
 
 PROG = "pixellogo"
-
-
-def _split_lines(values: list[str] | None) -> list[str]:
-    lines: list[str] = []
-    for value in values or []:
-        for part in str(value).split("\n"):
-            part = part.strip()
-            if part:
-                lines.append(part)
-    return lines
 
 
 def slugify(text: str, fallback: str = "pixellogo") -> str:
@@ -44,14 +35,14 @@ def build_parser() -> argparse.ArgumentParser:
     content.add_argument("--badge", default="", metavar="TEXT", help="右上角徽标文字")
 
     style = parser.add_argument_group("风格")
-    style.add_argument("-p", "--preset", default="terminal", metavar="NAME",
+    style.add_argument("-p", "--preset", default=None, metavar="NAME",
                        help="风格预设，见 --list presets（默认 terminal）")
     style.add_argument("--bg", metavar="HEX", help="底色")
     style.add_argument("--fg", metavar="HEX", help="字色")
     style.add_argument("--primary", metavar="HEX", help="主色（标题）")
     style.add_argument("--accent", metavar="HEX", help="强调色（分隔线/徽标）")
     style.add_argument("--shadow-color", metavar="HEX", help="投影色")
-    style.add_argument("--shadow-offset", type=int, default=1, metavar="N",
+    style.add_argument("--shadow-offset", type=int, default=None, metavar="N",
                        help="投影格数，0 关闭（默认 1）")
     style.add_argument("--title-size", type=int, metavar="PX", help="标题字号，缺省按画布自动适配")
     style.add_argument("--font-title", metavar="NAME|PATH", help="主标题字体")
@@ -68,11 +59,17 @@ def build_parser() -> argparse.ArgumentParser:
     layout.add_argument("--motif", choices=["auto", "none", "blocks"], default="auto", help="装饰图形")
 
     out = parser.add_argument_group("输出")
-    out.add_argument("-m", "--mode", default="xhs", metavar="MODE",
+    out.add_argument("-m", "--mode", default=None, metavar="MODE",
                      help="画布模式：xhs / 4:3 / og（默认 xhs）")
     out.add_argument("--size", metavar="WxH", help="自定义画布，如 1200x900")
     out.add_argument("--scale", type=int, default=None, metavar="N", help="输出放大倍数（默认 2）")
-    out.add_argument("-o", "--out", default="out", metavar="PATH", help="输出文件或目录（默认 out/）")
+    out.add_argument("-o", "--out", default=None, metavar="PATH", help="输出文件或目录（默认 out/）")
+
+    config_group = parser.add_argument_group("配置")
+    config_group.add_argument("-c", "--config", metavar="PATH", help="JSONC 配置文件")
+    config_group.add_argument("--set", action="append", metavar="KEY=VALUE",
+                              help="按点路径覆盖配置，如 colors.primary=#FF3D81，可重复")
+    config_group.add_argument("--dry-run", action="store_true", help="只打印合并后的配置，不渲染")
 
     misc = parser.add_argument_group("其他")
     misc.add_argument("--list", choices=["presets", "modes", "fonts"], help="列出可选项后退出")
@@ -108,55 +105,41 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.list:
         return _cmd_list(args.list)
-    if not args.title:
-        parser.error("缺少主标题：用 -t/--title 指定")
 
-    from pixellogo import modes as modes_mod
-    from pixellogo.layout import Design, build_scene
-    from pixellogo.presets import get_preset
+    from pixellogo import config as config_mod
+    from pixellogo import jsonc
+    from pixellogo.layout import build_scene
     from pixellogo.render import save
 
     try:
-        preset = get_preset(args.preset)
-        if args.size:
-            width, height = (int(part) for part in args.size.lower().split("x"))
-            mode = modes_mod.custom_mode(width, height, args.scale or 2)
-        else:
-            mode = modes_mod.get_mode(args.mode)
-        scale = args.scale or mode.scale
-
-        design = Design(
-            title=args.title,
-            preset=preset,
-            mode=mode,
-            subtitle=_split_lines(args.subtitle),
-            desc=_split_lines(args.desc),
-            eyebrow=args.eyebrow,
-            badge=args.badge,
-            align=args.align,
-            vertical=args.vertical,
-            margin=args.margin if args.margin is not None else 0.06,
-            shadow_offset=max(0, args.shadow_offset),
-            divider=args.divider,
-            divider_ratio=args.divider_width if args.divider_width is not None else 0.42,
-            title_size=args.title_size,
-            motif=args.motif,
-            colors={
-                "bg": args.bg, "fg": args.fg, "primary": args.primary,
-                "accent": args.accent, "shadow": args.shadow_color,
-            },
-            font_overrides={
-                "title": args.font_title, "sub": args.font_sub, "body": args.font_body,
-            },
-        )
-        scene = build_scene(design)
-        target = _resolve_target(args.out, args.title, mode.key)
-        save(scene, target, scale=scale)
+        file_data = jsonc.load(args.config) if args.config else None
+        cli_data = config_mod.cli_to_config(args)
+        for item in args.set or []:
+            key, sep, value = item.partition("=")
+            if not sep or not key.strip():
+                raise config_mod.ConfigError(f"--set 需要 KEY=VALUE 形式，收到 {item!r}")
+            config_mod.set_path(cli_data, key.strip(), config_mod.coerce(value))
+        settings = config_mod.resolve(file_data, cli_data)
     except (ValueError, OSError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return 2
 
-    print(f"{target}  ({scene.width * scale}×{scene.height * scale})")
+    for warning in settings.warnings:
+        print(f"{PROG}: 提示：{warning}", file=sys.stderr)
+
+    if args.dry_run:
+        print(json.dumps(settings.describe(), ensure_ascii=False, indent=2))
+        return 0
+
+    try:
+        scene = build_scene(settings.design)
+        target = _resolve_target(settings.out, settings.design.title, settings.mode_key)
+        save(scene, target, scale=settings.scale)
+    except (ValueError, OSError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return 2
+
+    print(f"{target}  ({scene.width * settings.scale}×{scene.height * settings.scale})")
     return 0
 
 

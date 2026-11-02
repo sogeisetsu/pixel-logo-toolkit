@@ -1,0 +1,16 @@
+// GitHub 仓库预览图：2:1，1280×640
+// 用法：pixellogo -c examples/og.jsonc
+{
+  "mode": "og",
+  "preset": "cyber",
+
+  "title": "像素工具包",
+  "subtitle": "PIXEL LOGO TOOLKIT",
+  "desc": ["8-bit 风格图像生成器", "PNG / SVG 双格式输出"],
+
+  "badge": "v0.1",
+  "layout": {
+    "divider": "line",
+    "motif": "blocks",
+  },
+}

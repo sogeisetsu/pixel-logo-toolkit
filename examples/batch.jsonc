@@ -1,0 +1,25 @@
+// 批量：顶层是数组时，每个元素出一张图
+// 用法：pixellogo -c examples/batch.jsonc -o out/
+[
+  {
+    "mode": "xhs",
+    "preset": "terminal",
+    "title": "REA",
+    "subtitle": ["REVERSE ENGINEER", "ANYTHING"],
+    "desc": ["One CLI + MCP server for agents"],
+  },
+  {
+    "mode": "4:3",
+    "preset": "arcade",
+    "title": "DEV",
+    "subtitle": "BUILD FASTER",
+    "desc": ["Agent-native tooling for modern teams"],
+  },
+  {
+    "mode": "og",
+    "preset": "minimal",
+    "title": "CLI",
+    "subtitle": "PIXELLOGO 0.1",
+    "desc": ["pixel art generator"],
+  },
+]
