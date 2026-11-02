@@ -20,13 +20,48 @@ def slugify(text: str, fallback: str = "pixellogo") -> str:
     return cleaned[:60] or fallback
 
 
+EPILOG = """\
+常用示例
+  最小用法
+    pixellogo -t "REA" -s "REVERSE ENGINEER" -d "One CLI for agents"
+
+  指定画布与格式
+    pixellogo -t "REA" -m poster -f png -o out/
+    pixellogo -t "REA" -m banner -f svg -o out/banner.svg
+
+  换风格与配色
+    pixellogo -t "PIXEL" -p cyber
+    pixellogo -t "PIXEL" -p forest --set colors.accent=#FF3D81
+
+  中文标题
+    pixellogo -t "像素工具包" -s "PIXEL LOGO TOOLKIT" --badge NEW
+
+  用配置文件
+    pixellogo -c examples/rea.jsonc
+    pixellogo -c examples/batch.jsonc -o out/ --json
+
+  查看选项清单
+    pixellogo --list modes
+    pixellogo --list presets
+    pixellogo --list fonts
+
+参数优先级：内置默认 < --preset < 配置文件 < 命令行参数
+完整文档：https://github.com/sogeisetsu/pixel-logo-toolkit
+"""
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=PROG,
         description="生成 8-bit / 复古终端风格的像素图（PNG / SVG）。",
-        epilog='示例：pixellogo -t "REA" -s "REVERSE ENGINEER" -m xhs -o out/',
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False,
     )
-    parser.add_argument("-V", "--version", action="version", version=f"{PROG} {__version__}")
+    general = parser.add_argument_group("通用选项")
+    general.add_argument("-h", "--help", action="help", help="显示本帮助并退出")
+    general.add_argument("-V", "--version", action="version", version=f"{PROG} {__version__}",
+                         help="显示版本号并退出")
 
     content = parser.add_argument_group("内容")
     content.add_argument("-t", "--title", help="主标题，支持 \\n 换行")
@@ -130,6 +165,15 @@ def _unique(paths: list[Path], used: set[Path]) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
+    if argv is None:
+        argv = sys.argv[1:]
+    if not argv:
+        parser.print_help()
+        return 0
+    if argv[0] in ("help", "--help-all"):
+        parser.print_help()
+        return 0
+
     args = parser.parse_args(argv)
 
     if args.list:
@@ -151,6 +195,7 @@ def main(argv: list[str] | None = None) -> int:
         settings_list = config_mod.resolve_many(file_data, cli_data, forced_out=args.out)
     except (ValueError, OSError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
+        print(f"用 {PROG} --help 查看完整用法。", file=sys.stderr)
         return 2
 
     for settings in settings_list:

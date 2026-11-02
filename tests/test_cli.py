@@ -33,6 +33,28 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("pixellogo", result.stdout)
 
+    def test_bare_invocation_prints_help(self):
+        result = run_cli()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("usage:", result.stdout)
+        self.assertIn("常用示例", result.stdout)
+
+    def test_help_subcommand(self):
+        result = run_cli("help")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("常用示例", result.stdout)
+
+    def test_help_short_flag(self):
+        result = run_cli("-h")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("通用选项", result.stdout)
+        self.assertIn("显示本帮助并退出", result.stdout)
+
+    def test_help_mentions_priority_and_lists(self):
+        text = run_cli("--help").stdout
+        self.assertIn("参数优先级", text)
+        self.assertIn("--list modes", text)
+
 
 class TestList(unittest.TestCase):
     def test_list_modes(self):
@@ -126,6 +148,7 @@ class TestRender(unittest.TestCase):
     def test_missing_title_is_an_error(self):
         result = run_cli("-m", "banner")
         self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--help", result.stderr)
 
     def test_unknown_preset_is_an_error(self):
         result = run_cli("-t", "X", "-p", "nope")
