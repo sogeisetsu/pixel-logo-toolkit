@@ -7,7 +7,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from pixellogo import modes, presets  # noqa: E402
-from pixellogo.layout import Design, build_scene  # noqa: E402
+from pixellogo.layout import Design, build_scene, missing_glyph_warnings  # noqa: E402
 
 
 def make(mode_key="poster", **kwargs):
@@ -157,6 +157,62 @@ class TestLayout(unittest.TestCase):
     def test_empty_title_rejected(self):
         with self.assertRaises(ValueError):
             make(title="  ")
+
+    def test_missing_glyph_warning_names_only_the_missing_chars(self):
+        design = Design(title="ZIG", preset=presets.get_preset("terminal"),
+                        mode=modes.get_mode("card"), desc=["compile time 即运行时"])
+        warnings = missing_glyph_warnings(design)
+        self.assertTrue(warnings)
+        self.assertTrue(any("即" in line for line in warnings), warnings)
+        # 同行里能正常渲染的字不应被牵连进告警
+        for char in "运行时":
+            self.assertFalse(any(char in line for line in warnings), char)
+
+    def test_no_glyph_warning_for_covered_text(self):
+        design = Design(title="ZIG", preset=presets.get_preset("terminal"),
+                        mode=modes.get_mode("card"), desc=["compile time 运行时"])
+        self.assertEqual(missing_glyph_warnings(design), [])
+
+
+LONG_CJK = "自动折行之后每一行都不会超出文本区域宽度限制这是用来验证折行是否生效的一整段中文副标题"
+
+
+class TestWrapping(unittest.TestCase):
+    def test_long_subtitle_stays_inside_canvas(self):
+        scene = make("card", subtitle=[LONG_CJK])
+        for rect in scene.rects:
+            self.assertLessEqual(rect.x + rect.w, scene.width)
+            self.assertLessEqual(rect.y + rect.h, scene.height)
+
+    def test_wrap_can_be_disabled(self):
+        # 关闭折行后回到旧行为：单行硬挤，越出画布右侧
+        wrapped = make("card", subtitle=[LONG_CJK])
+        raw = make("card", subtitle=[LONG_CJK], wrap=False)
+        self.assertGreater(max(r.x + r.w for r in raw.rects),
+                           max(r.x + r.w for r in wrapped.rects))
+        self.assertGreater(max(r.x + r.w for r in raw.rects), raw.width)
+
+    def test_many_lines_shrink_to_fit(self):
+        scene = make("poster", subtitle=[f"LINE {index}" for index in range(14)])
+        for rect in scene.rects:
+            self.assertLessEqual(rect.y + rect.h, scene.height)
+
+    def test_overflow_is_reported_when_even_minimum_font_fails(self):
+        design = Design(title="TEST", preset=presets.get_preset("terminal"),
+                        mode=modes.get_mode("poster"),
+                        subtitle=[f"LINE {index}" for index in range(60)])
+        diagnostics: list[str] = []
+        build_scene(design, diagnostics)
+        self.assertTrue(diagnostics)
+        self.assertIn("px", diagnostics[0])
+
+    def test_normal_content_has_no_diagnostics(self):
+        design = Design(title="REA", preset=presets.get_preset("terminal"),
+                        mode=modes.get_mode("poster"),
+                        subtitle=["REVERSE ENGINEER"], desc=["One CLI for agents"])
+        diagnostics: list[str] = []
+        build_scene(design, diagnostics)
+        self.assertEqual(diagnostics, [])
 
 
 if __name__ == "__main__":

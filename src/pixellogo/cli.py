@@ -103,6 +103,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help=i18n.t("cli.arg.motif"))
     layout.add_argument("--bg-pattern", choices=["none", "grid", "dots", "scanlines"], default=None,
                         help=i18n.t("cli.arg.bg_pattern"))
+    layout.add_argument("--wrap", action=argparse.BooleanOptionalAction, default=None,
+                        help=i18n.t("cli.arg.wrap"))
 
     out = parser.add_argument_group(i18n.t("cli.group.output"))
     out.add_argument("-m", "--mode", default=None, metavar="MODE", help=i18n.t("cli.arg.mode"))
@@ -281,7 +283,10 @@ def main(argv: list[str] | None = None) -> int:
     results: list[dict] = []
     try:
         for settings in settings_list:
-            scene = build_scene(settings.design)
+            diagnostics: list[str] = []
+            scene = build_scene(settings.design, diagnostics)
+            for message in diagnostics:
+                print(i18n.t("cli.warning", prog=PROG, message=message), file=sys.stderr)
             targets = _unique(_targets(settings.out, settings.design.title,
                                        settings.mode_key, settings.formats), used)
             for target in targets:

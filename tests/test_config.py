@@ -127,6 +127,19 @@ class TestResolve(unittest.TestCase):
         snapshot = configlib.resolve({"title": "REA", "mode": "banner"}, {}).describe()
         self.assertEqual(snapshot["canvas"]["output"], [1280, 640])
         self.assertEqual(snapshot["content"]["title"], "REA")
+        self.assertTrue(snapshot["layout"]["wrap"])
+
+    def test_wrap_defaults_on_and_can_be_disabled(self):
+        self.assertTrue(configlib.resolve({"title": "A"}, {}).design.wrap)
+        off = configlib.resolve({"title": "A", "layout": {"wrap": False}}, {})
+        self.assertFalse(off.design.wrap)
+        # 配置里写字面量字符串也要当成关闭
+        text_off = configlib.resolve({"title": "A", "layout": {"wrap": "false"}}, {})
+        self.assertFalse(text_off.design.wrap)
+
+    def test_uppercase_string_false_is_not_truthy(self):
+        settings = configlib.resolve({"title": "a", "layout": {"uppercase": "false"}}, {})
+        self.assertFalse(settings.design.uppercase)
 
     def test_example_configs_are_valid(self):
         for name in ("rea.jsonc", "og.jsonc"):

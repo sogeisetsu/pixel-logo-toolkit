@@ -222,6 +222,8 @@ Docs: https://github.com/sogeisetsu/pixel-logo-toolkit
         "cli.arg.divider_width": "divider width ratio (default: 0.42)",
         "cli.arg.motif": "decorative motif",
         "cli.arg.bg_pattern": "background pattern (default: none)",
+        "cli.arg.wrap": ("wrap long subtitle/desc/eyebrow lines instead of clipping "
+                         "(default: on; --no-wrap disables)"),
         "cli.arg.mode": "canvas mode: poster / card / banner / slide / square (default: poster)",
         "cli.arg.size": "custom canvas, e.g. 1200x900",
         "cli.arg.scale": "output upscale factor (default: 2)",
@@ -293,6 +295,11 @@ Docs: https://github.com/sogeisetsu/pixel-logo-toolkit
         "config.warn.color": "unknown color colors.{key} ignored",
         "config.warn.font": "unknown font fonts.{key} ignored",
         "config.warn.layout": "unknown layout option layout.{key} ignored",
+        "config.warn.glyph": ("font {font} has no glyph for {chars}; "
+                              "those characters will render as boxes"),
+        "layout.warn.overflow": ("content is {total}px tall but only {available}px is "
+                                 "available; font size is already at {size}px, "
+                                 "the rest will be clipped"),
         # ---- 字体 ----
         "font.lang.unknown": "unknown language {lang!r}; available: {known}",
         "font.not_installed": ("{key} font is not installed. Run `pixellogo fonts install {key}` "
@@ -395,6 +402,7 @@ Docs: https://github.com/sogeisetsu/pixel-logo-toolkit
         "cli.arg.divider_width": "分隔线宽度比（默认 0.42）",
         "cli.arg.motif": "装饰图形",
         "cli.arg.bg_pattern": "背景纹理（默认 none）",
+        "cli.arg.wrap": "超宽的副标题 / 说明 / 小字标签自动折行（默认开启，--no-wrap 关闭）",
         "cli.arg.mode": "画布模式：poster / card / banner / slide / square（默认 poster）",
         "cli.arg.size": "自定义画布，如 1200x900",
         "cli.arg.scale": "输出放大倍数（默认 2）",
@@ -465,6 +473,9 @@ Docs: https://github.com/sogeisetsu/pixel-logo-toolkit
         "config.warn.color": "未知颜色项 colors.{key} 已忽略",
         "config.warn.font": "未知字体项 fonts.{key} 已忽略",
         "config.warn.layout": "未知排版项 layout.{key} 已忽略",
+        "config.warn.glyph": "字体 {font} 缺少字形：{chars}，这些字会渲染成方块",
+        "layout.warn.overflow": ("内容高 {total}px，可用高度只有 {available}px，字号已缩到 {size}px，"
+                                 "超出部分会被画布裁切"),
         # ---- 字体 ----
         "font.lang.unknown": "未知语言 {lang!r}；可用：{known}",
         "font.not_installed": ("未安装 {key} 字体。运行 `pixellogo fonts install {key}` 下载后重试，"

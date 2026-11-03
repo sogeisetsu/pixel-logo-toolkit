@@ -35,6 +35,7 @@ Latin / Chinese / Japanese / Korean text without missing glyphs.
   - [Flags and exit codes](#flags-and-exit-codes)
 - [Preset gallery](#preset-gallery)
 - [Command gallery](docs/gallery.md) — 40 rendered samples with the exact commands
+- [Documentation](#documentation)
 - [Development and tests](#development-and-tests)
 - [FAQ](#faq)
 - [License](#license)
@@ -88,7 +89,7 @@ Verify the install:
 
 ```console
 $ pixellogo --version
-pixellogo 0.2.0
+pixellogo 0.3.0
 
 $ pixellogo --list modes
 poster     3:4  Portrait poster (Xiaohongshu cover)        output 1080×1440
@@ -318,15 +319,21 @@ badge), shadow color, plus the font pairing and shadow strength.
 | `--tracking` | 0.5–1.5 | `1.0` | Letter-spacing multiplier; `0.9` is tighter |
 | `--leading` | 0.8–2.0 | `1.0` | Line-height multiplier |
 | `--uppercase` | switch | off | Render all text in uppercase |
+| `--wrap` / `--no-wrap` | switch pair | on | Wrap long subtitle/desc/eyebrow lines to the text area instead of clipping |
 | `--shadow-offset` | 0–4 | `1` | Title shadow depth in blocks; `0` disables |
 
 Title size auto-fits in both directions: long titles shrink to the text width, short titles
 grow until they nearly fill it, capped at about 42% of the canvas height.
 
+Subtitle, footnote and eyebrow lines **wrap automatically** to the text area; if the wrapped
+block is still taller than the canvas, the font size steps down to 9px and only then reports a
+warning. Pass `--no-wrap` to go back to single, overflowing lines.
+
 ```bash
 pixellogo -t "PIXEL" --tracking 0.88 --leading 1.2 --uppercase
 pixellogo -t "PIXEL" --align left --vertical top --divider dash
 pixellogo -t "PIXEL" --shadow-offset 0            # flat, no shadow
+pixellogo -t "PIXEL" -s "<a very long subtitle>" --no-wrap   # opt out of wrapping
 ```
 
 ### Background patterns
@@ -580,6 +587,15 @@ For the full set of combinations — canvases × presets × textures, plus local
 Korean / Traditional Chinese examples — see the
 **[command gallery →](docs/gallery.md)** (40 samples, each with its exact command;
 currently written in Chinese).
+
+---
+
+## Documentation
+
+Two in-depth guides live in `docs/` (currently written in Chinese):
+
+- **[`docs/architecture.md`](docs/architecture.md)** — the project file tree (three levels, every entry annotated), the layer-by-layer module responsibilities, the render data flow, and the constraints this architecture imposes.
+- **[`docs/cli-guide.md`](docs/cli-guide.md)** — the complete command-line manual: a guided quick start, every flag in detail, JSONC configs and batch mode, scripting and exit codes, plus a dedicated chapter on **limits and boundaries** (how many characters fit per canvas, line-count ceilings, which glyphs the bundled fonts are missing, which values the CLI cannot override) and a troubleshooting table.
 
 ---
 

@@ -7,6 +7,9 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
+sys.path.insert(0, SRC)
+
+from pixellogo import __version__  # noqa: E402
 
 
 def run_cli(*args, lang="zh"):
@@ -31,7 +34,7 @@ class TestVersion(unittest.TestCase):
     def test_version_flag(self):
         result = run_cli("--version")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("pixellogo 0.2.0", result.stdout)
+        self.assertIn(f"pixellogo {__version__}", result.stdout)
 
     def test_help_lists_entrypoint(self):
         result = run_cli("--help")

@@ -103,5 +103,54 @@ class TestTextMask(unittest.TestCase):
         self.assertEqual(shadows[0].y - rects[0].y, 6)
 
 
+class TestWrap(unittest.TestCase):
+    chain = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.chain = fonts.resolve_chain("silkscreen")
+
+    def test_measure_matches_mask_within_side_bearing(self):
+        for text_value in ("REVERSE ENGINEER", "REA"):
+            measured = text.measure_width(text_value, 23, self.chain)
+            mask = text.line_mask(text_value, 23, self.chain)
+            # 步进宽度不小于墨迹宽度，且不会宽得离谱
+            self.assertGreaterEqual(measured, mask.width)
+            self.assertLessEqual(measured - mask.width, 23)
+
+    def test_short_line_is_untouched(self):
+        self.assertEqual(text.wrap_line("SHORT", 23, self.chain, 400), ["SHORT"])
+
+    def test_latin_breaks_on_spaces(self):
+        lines = text.wrap_line("REVERSE ENGINEER", 23, self.chain, 200)
+        self.assertEqual(lines, ["REVERSE", "ENGINEER"])
+        for line in lines:
+            self.assertLessEqual(text.measure_width(line, 23, self.chain), 200)
+
+    def test_cjk_breaks_per_character(self):
+        source = "自动折行之后每一行都不会超出文本区域宽度限制"
+        lines = text.wrap_line(source, 23, self.chain, 200)
+        self.assertGreater(len(lines), 1)
+        self.assertEqual("".join(lines), source)
+        for line in lines:
+            self.assertLessEqual(text.measure_width(line, 23, self.chain), 200)
+
+    def test_long_word_is_hard_split(self):
+        source = "https://example.com/a/very/long/path/without/spaces"
+        lines = text.wrap_line(source, 18, self.chain, 150)
+        self.assertGreater(len(lines), 1)
+        self.assertEqual("".join(lines), source)
+        for line in lines:
+            self.assertLessEqual(text.measure_width(line, 18, self.chain), 150)
+
+    def test_empty_line_stays_empty(self):
+        self.assertEqual(text.wrap_line("", 23, self.chain, 200), [""])
+
+    def test_tracking_is_respected(self):
+        tight = text.measure_width("REVERSE", 23, self.chain, tracking=0.8)
+        normal = text.measure_width("REVERSE", 23, self.chain)
+        self.assertLess(tight, normal)
+
+
 if __name__ == "__main__":
     unittest.main()

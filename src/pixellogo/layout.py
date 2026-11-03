@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from pixellogo import fonts as fontlib
 from pixellogo import i18n
@@ -17,6 +18,12 @@ from pixellogo.scene import Rect, Scene
 
 #: 需要右侧装饰时，留给装饰的宽度占内容区的比例
 MOTIF_RESERVE = 0.26
+
+#: 副标题与说明缩字号的下限（再小就看不出像素网格了）
+MIN_TEXT_SIZE = 9
+
+#: 折行 + 缩字号：先按比例跳几次，再逐像素微调；到下限仍放不下就告警
+FIT_JUMPS = 3
 
 
 @dataclass
@@ -41,6 +48,7 @@ class Design:
     tracking: float = 1.0
     leading: float = 1.0
     uppercase: bool = False
+    wrap: bool = True            # 副标题 / 说明 / 小字标签超宽时自动折行
     colors: dict[str, str] = field(default_factory=dict)
     font_overrides: dict[str, str] = field(default_factory=dict)
     motif: str = "auto"          # auto | none | blocks
@@ -168,7 +176,16 @@ def _draw_badge(scene: Scene, design: Design, palette: dict[str, str], margin: i
         return
     chain = _body_chain(design)
     size = max(9, int(round(body_size * 0.9)))
+
+    def boxed(mask) -> int:
+        pad = max(5, int(round(size * 0.55)))
+        return mask.width + pad * 2
+
     mask = textlib.line_mask(design.badge, size, chain, tracking=design.tracking)
+    # 徽标是实心框，不折行；超宽时缩小字号直到放得进内容区
+    while mask is not None and boxed(mask) > content_w and size > 9:
+        size -= 1
+        mask = textlib.line_mask(design.badge, size, chain, tracking=design.tracking)
     if mask is None:
         return
     pad_x = max(5, int(round(size * 0.55)))
@@ -241,8 +258,23 @@ def _draw_motif(scene: Scene, design: Design, palette: dict[str, str],
         scene.add(Rect(x, y, unit, unit, color))
 
 
-def build_scene(design: Design) -> Scene:
-    """把设计稿排成场景。"""
+def _visual_lines(lines: list[str], size: int, chain: list[str], text_w: int,
+                  tracking: float, wrap: bool) -> list[str]:
+    """把用户给的行展开成实际渲染行：开启折行时按文本区宽度折开。"""
+    if not wrap:
+        return [line for line in lines if line.strip()]
+    result: list[str] = []
+    for line in lines:
+        result.extend(textlib.wrap_line(line, size, chain, text_w, tracking))
+    return [line for line in result if line.strip()]
+
+
+def build_scene(design: Design, diagnostics: list[str] | None = None) -> Scene:
+    """把设计稿排成场景。
+
+    ``diagnostics`` 传入列表时，排版过程中发现的问题（例如缩到最小字号仍放不下）
+    会以本地化文案追加进去，由调用方决定怎么提示。
+    """
     mode = design.mode
     palette = _resolve_colors(design)
     scene = Scene(width=mode.width, height=mode.height, background=palette["bg"])
@@ -271,8 +303,8 @@ def build_scene(design: Design) -> Scene:
     if not title_lines:
         raise ValueError(i18n.t("layout.title.empty"))
 
-    sub_size = max(9, int(round(mode.height * 0.042)))
-    body_size = max(9, int(round(mode.height * 0.034)))
+    base_sub = max(MIN_TEXT_SIZE, int(round(mode.height * 0.042)))
+    base_body = max(MIN_TEXT_SIZE, int(round(mode.height * 0.034)))
     eyebrow_size = max(8, int(round(mode.height * 0.026)))
 
     # 标题块最多占可用高度的一半，避免多行标题把副标题挤出画布
@@ -283,40 +315,90 @@ def build_scene(design: Design) -> Scene:
     title_size, title_masks = _fit_title(title_lines, title_chain, text_w, start_size,
                                          design.title_size or auto_cap, design)
 
-    eyebrow_mask = (textlib.line_mask(prepared(design.eyebrow), eyebrow_size, body_chain,
-                                     tracking=design.tracking) if design.eyebrow else None)
-    sub_masks = [m for m in (textlib.line_mask(prepared(t), sub_size, sub_chain,
-                                               tracking=design.tracking) for t in design.subtitle) if m]
-    body_masks = [m for m in (textlib.line_mask(prepared(t), body_size, body_chain,
-                                                tracking=design.tracking) for t in design.desc) if m]
+    eyebrow_src = [prepared(design.eyebrow)] if design.eyebrow else []
+    sub_src = [prepared(t) for t in design.subtitle]
+    body_src = [prepared(t) for t in design.desc]
 
     thickness = max(2, int(round(mode.height * 0.010)))
     divider_w = max(12, int(round(text_w * design.divider_ratio)))
-
-    stack = _Stack(design.leading)
-    divider_at: int | None = None
-    if eyebrow_mask:
-        stack.line(eyebrow_mask, palette["accent"], "eyebrow")
-        stack.gap(title_size * 0.18)
-    for mask in title_masks:
-        stack.line(mask, palette["primary"], "title")
-        stack.gap(title_size * 0.04)
-    if sub_masks:
-        stack.gap(title_size * 0.20)
-        for mask in sub_masks:
-            stack.line(mask, palette["fg"], "sub")
-            stack.gap(sub_size * 0.35)
-    if divider != "none":
-        stack.gap(max(6, int((sub_size if sub_masks else title_size) * 0.6)))
-        divider_at = stack.cursor
-        stack.gap(thickness)
-        stack.gap(max(6, int(body_size * 0.8)))
-    for mask in body_masks:
-        stack.line(mask, palette["fg"], "body")
-        stack.gap(body_size * 0.35)
-
-    total = max((offset + mask.line_height for mask, offset, _c, _k in stack.items), default=0)
     available = mode.height - margin * 2
+
+    def compose(sub_size: int, body_size: int):
+        """按给定字号折行并堆叠，返回 (行栈, 内容总高, 分隔线位置)。"""
+        stack = _Stack(design.leading)
+        divider_at: int | None = None
+
+        for line in _visual_lines(eyebrow_src, eyebrow_size, body_chain,
+                                  text_w, design.tracking, design.wrap):
+            mask = textlib.line_mask(line, eyebrow_size, body_chain, tracking=design.tracking)
+            if mask:
+                stack.line(mask, palette["accent"], "eyebrow")
+                stack.gap(eyebrow_size * 0.16)
+        if stack.items:
+            stack.gap(title_size * 0.18)
+
+        for mask in title_masks:
+            stack.line(mask, palette["primary"], "title")
+            stack.gap(title_size * 0.04)
+
+        sub_masks = [m for m in (textlib.line_mask(line, sub_size, sub_chain,
+                                                  tracking=design.tracking)
+                                 for line in _visual_lines(sub_src, sub_size, sub_chain,
+                                                           text_w, design.tracking, design.wrap))
+                     if m]
+        if sub_masks:
+            stack.gap(title_size * 0.20)
+            for mask in sub_masks:
+                stack.line(mask, palette["fg"], "sub")
+                stack.gap(sub_size * 0.35)
+
+        if divider != "none":
+            stack.gap(max(6, int((sub_size if sub_masks else title_size) * 0.6)))
+            divider_at = stack.cursor
+            stack.gap(thickness)
+            stack.gap(max(6, int(body_size * 0.8)))
+
+        for mask in (m for m in (textlib.line_mask(line, body_size, body_chain,
+                                                   tracking=design.tracking)
+                                 for line in _visual_lines(body_src, body_size, body_chain,
+                                                           text_w, design.tracking, design.wrap))
+                     if m):
+            stack.line(mask, palette["fg"], "body")
+            stack.gap(body_size * 0.35)
+
+        total = max((offset + mask.line_height for mask, offset, _c, _k in stack.items),
+                    default=0)
+        extent = total
+        if divider_at is not None:
+            # 分隔线两端的方块会伸出行高之外，判定溢出时要把它算进去
+            cap = max(6, thickness * 3)
+            extent = max(extent, divider_at - cap // 2 + thickness // 2 + cap)
+        return stack, total, divider_at, extent
+
+    # 垂直放不下时缩小副标题与说明的字号，再重新折行重排：
+    # 先按总高比例跳几次（快），再逐像素微调（准），直到放得下或触到下限
+    sub_size, body_size = base_sub, base_body
+    stack, total, divider_at, extent = compose(sub_size, body_size)
+    for _ in range(FIT_JUMPS):
+        if extent <= available:
+            break
+        factor = available / extent
+        next_sub = max(MIN_TEXT_SIZE, int(sub_size * factor))
+        next_body = max(MIN_TEXT_SIZE, int(body_size * factor))
+        if (next_sub, next_body) == (sub_size, body_size):
+            break
+        sub_size, body_size = next_sub, next_body
+        stack, total, divider_at, extent = compose(sub_size, body_size)
+
+    while extent > available and (sub_size > MIN_TEXT_SIZE or body_size > MIN_TEXT_SIZE):
+        sub_size = max(MIN_TEXT_SIZE, sub_size - 1)
+        body_size = max(MIN_TEXT_SIZE, body_size - 1)
+        stack, total, divider_at, extent = compose(sub_size, body_size)
+
+    if extent > available and diagnostics is not None:
+        diagnostics.append(i18n.t("layout.warn.overflow", total=extent,
+                                  available=available, size=min(sub_size, body_size)))
+
     if vertical == "top":
         origin_y = margin
     else:
@@ -350,3 +432,44 @@ def build_scene(design: Design) -> Scene:
 
 def palette_of(design: Design) -> dict[str, str]:
     return _resolve_colors(design)
+
+
+def missing_glyph_warnings(design: Design) -> list[str]:
+    """检查该设计真正会用到的字体能否覆盖全部文字，返回缺字告警。
+
+    与 :func:`build_scene` 走同一套字体挑选逻辑（``pick_unified``），因此报出来的
+    缺字就是最终会渲染成方块的那几个字。同一款字体的缺字合并成一条告警。
+    未安装的字形变体不会在这里报错：内容里没有对应文字时本就不算错误。
+    """
+    try:
+        chains = (_title_chain(design), _sub_chain(design), _body_chain(design))
+    except fontlib.FontError:
+        return []
+    title_chain, sub_chain, body_chain = chains
+
+    def prepared(value: str) -> str:
+        text = value.upper() if design.uppercase else value
+        return text.strip()
+
+    checks: list[tuple[list[str], str]] = [(title_chain, line)
+                                           for line in design.title.split("\n")]
+    checks.append((body_chain, design.eyebrow))
+    checks.extend((sub_chain, line) for line in design.subtitle)
+    checks.extend((body_chain, line) for line in design.desc)
+    checks.append((body_chain, design.badge))
+
+    missing_by_font: dict[str, list[str]] = {}
+    for chain, raw in checks:
+        text = prepared(raw)
+        if not text:
+            continue
+        chosen = fontlib.pick_unified(text, chain)
+        bucket = missing_by_font.setdefault(chosen, [])
+        for char in fontlib.missing_chars(chosen, text):
+            if char not in bucket:
+                bucket.append(char)
+        if not bucket:
+            missing_by_font.pop(chosen, None)
+
+    return [i18n.t("config.warn.glyph", font=Path(chosen).name, chars="".join(chars))
+            for chosen, chars in missing_by_font.items()]

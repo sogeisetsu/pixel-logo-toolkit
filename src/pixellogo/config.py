@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pixellogo import fonts as fontlib
 from pixellogo import i18n
 from pixellogo import modes as modes_mod
-from pixellogo.layout import Design
+from pixellogo.layout import Design, missing_glyph_warnings
 from pixellogo.presets import Preset, get_preset
 
 COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
@@ -25,7 +25,7 @@ FONT_KEYS = {"title", "sub", "body"}
 LAYOUT_KEYS = {
     "align", "vertical", "margin", "divider", "dividerWidth",
     "divider-width", "titleSize", "title-size", "motif", "shadowOffset", "shadow-offset",
-    "cjkBold", "cjk-bold", "tracking", "leading", "uppercase", "pattern",
+    "cjkBold", "cjk-bold", "tracking", "leading", "uppercase", "pattern", "wrap",
 }
 
 ALIGN_VALUES = {"auto", "left", "center"}
@@ -88,6 +88,7 @@ class Settings:
                 "titleSize": design.title_size or "auto",
                 "shadowOffset": design.shadow_offset,
                 "motif": design.motif,
+                "wrap": design.wrap,
             },
             "output": {"path": self.out, "format": self.formats},
         }
@@ -164,6 +165,18 @@ def _layout_value(layout: dict, *names):
         if name in layout and layout[name] is not None:
             return layout[name]
     return None
+
+
+FALSE_WORDS = {"false", "0", "off", "no", ""}
+
+
+def _as_bool(value, default: bool = False) -> bool:
+    """宽松解析布尔开关：配置里写 ``"false"`` 也应视为关闭。"""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in FALSE_WORDS
+    return bool(value)
 
 
 def validate(merged: dict) -> list[str]:
@@ -248,6 +261,8 @@ def cli_to_config(args) -> dict:
         layout["uppercase"] = True
     if getattr(args, "bg_pattern", None):
         layout["pattern"] = args.bg_pattern
+    if getattr(args, "wrap", None) is not None:
+        layout["wrap"] = args.wrap
     if layout:
         data["layout"] = layout
 
@@ -370,7 +385,8 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
     if not 0.8 <= leading <= 2.0:
         raise ConfigError(i18n.t("config.range", name="leading", low=0.8, high=2.0))
 
-    uppercase = bool(_layout_value(layout_cfg, "uppercase"))
+    uppercase = _as_bool(_layout_value(layout_cfg, "uppercase"), False)
+    wrap = _as_bool(_layout_value(layout_cfg, "wrap"), True)
 
     lang = fontlib.normalize_lang(str(merged.get("lang") or fontlib.DEFAULT_LANG))
     if lang not in fontlib.BUNDLED_VARIANTS:
@@ -412,6 +428,7 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
         tracking=tracking,
         leading=leading,
         uppercase=uppercase,
+        wrap=wrap,
         motif=motif,
         pattern=pattern,
         lang=lang,
@@ -419,7 +436,7 @@ def resolve(file_data, cli_data: dict, forced_out: str | None = None) -> Setting
         font_overrides={key: value for key, value in fonts_cfg.items() if isinstance(value, str)},
     )
     return Settings(design=design, scale=scale, out=str(out), formats=_parse_formats(merged),
-                    merged=merged, warnings=warnings)
+                    merged=merged, warnings=warnings + missing_glyph_warnings(design))
 
 
 def resolve_many(file_data, cli_data: dict, forced_out: str | None = None) -> list[Settings]:

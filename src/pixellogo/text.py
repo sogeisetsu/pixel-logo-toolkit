@@ -81,10 +81,7 @@ def line_mask(
     line_height = ascent + descent
 
     def advance_of(font, part: str) -> int:
-        if tracking == 1.0:
-            return int(round(font.getlength(part)))
-        # 逐字累加，才能对字距做非整数缩放
-        return sum(int(round(font.getlength(char) * tracking)) for char in part)
+        return _advance(font, part, tracking)
 
     pad = size + bold_px * 2 + 4
     advance = sum(advance_of(font, part) for font, part in metrics)
@@ -121,6 +118,106 @@ def line_mask(
         baseline=baseline_y - bbox[1],
         line_height=line_height,
     )
+
+
+def _advance(font: ImageFont.FreeTypeFont, part: str, tracking: float) -> int:
+    """一段文字的水平步进；与 :func:`line_mask` 的排布分支保持一致。"""
+    if tracking == 1.0:
+        return int(round(font.getlength(part)))
+    return sum(int(round(font.getlength(char) * tracking)) for char in part)
+
+
+def measure_width(text: str, size: int, chain: list[str], tracking: float = 1.0,
+                  bold_px: int = 0) -> int:
+    """只估算行宽，不栅格化。
+
+    与 :func:`line_mask` 使用同一套字体挑选与步进规则（中英混排时整行选一款字体），
+    但返回的是**步进宽度**（advance），比实际墨迹略宽，用于折行判断足够保守。
+    """
+    if not text:
+        return 0
+    size = max(4, int(size))
+    path = fontlib.pick_unified(text, chain)
+    font = load_font(path, size)
+    return _advance(font, text, tracking) + bold_px * 2
+
+
+def _is_breakable(char: str) -> bool:
+    """中日韩字符与全角标点可以逐字断行（这类文字没有空格可用）。"""
+    code = ord(char)
+    return (0x2E80 <= code <= 0x9FFF      # CJK 部首、假名、汉字
+            or 0xAC00 <= code <= 0xD7AF   # 谚文
+            or 0xF900 <= code <= 0xFAFF   # 兼容汉字
+            or 0xFF00 <= code <= 0xFFEF)  # 全角字符
+
+
+def _wrap_units(text: str) -> list[str]:
+    """把一行切成可断单元：中日韩逐字、拉丁按空白成词。"""
+    units: list[str] = []
+    word = ""
+    for char in text:
+        if char.isspace():
+            if word:
+                units.append(word)
+                word = ""
+            units.append(" ")
+        elif _is_breakable(char):
+            if word:
+                units.append(word)
+                word = ""
+            units.append(char)
+        else:
+            word += char
+    if word:
+        units.append(word)
+    return units
+
+
+def _hard_split(unit: str, size: int, chain: list[str], max_width: int,
+                tracking: float) -> list[str]:
+    """单个词本身就超宽时，退化成按字符硬切，保证一定能放下。"""
+    pieces: list[str] = []
+    rest = unit
+    while rest and measure_width(rest, size, chain, tracking) > max_width:
+        cut = len(rest) - 1
+        while cut > 1 and measure_width(rest[:cut], size, chain, tracking) > max_width:
+            cut -= 1
+        pieces.append(rest[:cut])
+        rest = rest[cut:]
+    if rest:
+        pieces.append(rest)
+    return pieces
+
+
+def wrap_line(text: str, size: int, chain: list[str], max_width: int,
+              tracking: float = 1.0) -> list[str]:
+    """把一行文字折成若干行，每行宽度不超过 ``max_width``。
+
+    断行规则：中文与全角标点逐字可断；拉丁按空格成词，断点吃在空格上；
+    整词仍超宽时按字符硬切（长 URL 也不会溢出）。放得下时原样返回
+    ``[text]``，空串同理，保持与 :func:`line_mask` 一致的输入输出习惯。
+    """
+    if not text or max_width <= 0:
+        return [text]
+    if measure_width(text, size, chain, tracking) <= max_width:
+        return [text]
+
+    lines: list[str] = []
+    current = ""
+    for unit in _wrap_units(text):
+        candidate = current + unit
+        if current and measure_width(candidate, size, chain, tracking) > max_width:
+            lines.append(current.rstrip())
+            current = unit.lstrip()
+        else:
+            current = candidate
+        while current and measure_width(current, size, chain, tracking) > max_width:
+            pieces = _hard_split(current, size, chain, max_width, tracking)
+            lines.extend(piece.rstrip() for piece in pieces[:-1])
+            current = pieces[-1].lstrip() if pieces else ""
+    if current.strip():
+        lines.append(current.rstrip())
+    return [line for line in lines if line] or [text]
 
 
 def mask_rects(mask: Image.Image, x: int, y: int, fill: str) -> list[Rect]:

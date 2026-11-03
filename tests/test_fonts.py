@@ -60,6 +60,12 @@ class TestSelection(unittest.TestCase):
         chain = fonts.resolve_chain("press-start-2p")
         self.assertEqual(fonts.pick_unified("REA 逆向", chain), fonts.font_path("ark-pixel"))
 
+    def test_unified_falls_back_to_best_coverage(self):
+        # 「即」不在内置中文字体里；此时不能退回拉丁字体，否则整行都变方块
+        chain = fonts.resolve_chain("pixelify")
+        self.assertEqual(fonts.pick_unified("compile time 即运行时", chain),
+                         fonts.font_path("ark-pixel"))
+
     def test_chain_deduplicates(self):
         chain = fonts.resolve_chain("ark-pixel", ["ark-pixel"])
         self.assertEqual(len(chain), 1)

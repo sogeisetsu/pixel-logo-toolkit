@@ -311,11 +311,18 @@ def pick_unified(text: str, chain: list[str]) -> str:
     """为一整行文字挑选唯一字体：优先用能完整覆盖它的第一个字体。
 
     中英混排时整行统一字形，避免同一行里出现两种笔画粗细。
+    若没有任何字体能完整覆盖整行（例如中文字体缺个别汉字），退回**缺字最少**
+    的那款字体，而不是链首的拉丁字体——否则一个缺字会让整行都变成方块。
     """
+    best = chain[0]
+    best_missing: int | None = None
     for path in chain:
-        if not missing_chars(path, text):
+        missing = missing_chars(path, text)
+        if not missing:
             return path
-    return chain[0]
+        if best_missing is None or len(missing) < best_missing:
+            best, best_missing = path, len(missing)
+    return best
 
 
 def pick_per_char(char: str, chain: list[str]) -> str:

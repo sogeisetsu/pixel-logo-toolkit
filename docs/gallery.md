@@ -142,7 +142,7 @@ pixellogo -t RUST -s FEARLESS -s CONCURRENCY -d "cargo build --release" -m card 
 <img src="images/gallery/zig.png" width="560" alt="ZIG">
 
 ```bash
-pixellogo -t ZIG -s "NO HIDDEN" -s ALLOCATIONS -d "compile time 即运行时" -m card -p forest -f png \
+pixellogo -t ZIG -s "NO HIDDEN" -s ALLOCATIONS -d "compile time 运行时" -m card -p forest -f png \
 -o docs/images/gallery/zig.png
 ```
 
