@@ -34,7 +34,8 @@ Latin / Chinese / Japanese / Korean text without missing glyphs.
   - [Python API](#python-api)
   - [Flags and exit codes](#flags-and-exit-codes)
 - [Preset gallery](#preset-gallery)
-- [Command gallery](docs/gallery.md) — 40 rendered samples with the exact commands
+- [Command gallery](docs/gallery.md) — 52 rendered samples with the exact commands
+- [Browsable gallery](docs/gallery.html) — the same set as a filterable, lazy-loaded page with a lightbox
 - [Documentation](#documentation)
 - [Development and tests](#development-and-tests)
 - [FAQ](#faq)
@@ -118,8 +119,9 @@ REA-poster.png  REA-poster.svg
 Running `pixellogo` with no arguments prints the help page; `pixellogo --help`,
 `pixellogo -h` and `pixellogo help` are equivalent.
 
-More scenarios — different languages, canvases and textures, 40 rendered samples with their
-commands — live in the [command gallery](docs/gallery.md) (currently in Chinese).
+More scenarios — different languages, canvases and textures, 52 rendered samples with their
+commands — live in the [command gallery](docs/gallery.md) (currently in Chinese). To browse them
+as a page instead, open the **[browsable gallery](docs/gallery.html)**.
 
 ---
 
@@ -585,8 +587,10 @@ Exit codes: `0` success, `2` invalid arguments or configuration (error text goes
 
 For the full set of combinations — canvases × presets × textures, plus localized Japanese /
 Korean / Traditional Chinese examples — see the
-**[command gallery →](docs/gallery.md)** (40 samples, each with its exact command;
-currently written in Chinese).
+**[command gallery →](docs/gallery.md)** (52 samples, each with its exact command;
+currently written in Chinese). Prefer clicking through them? The
+**[browsable gallery](docs/gallery.html)** renders the same set with category filters,
+lazy loading and a keyboard-navigable lightbox.
 
 ---
 

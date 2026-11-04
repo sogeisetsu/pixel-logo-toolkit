@@ -2,9 +2,15 @@
 
 > 本文档目前只有中文版；功能总览与安装说明见英文 [README.md](../README.md)。
 
-40 张成品，全部由 `pixellogo` 一条命令生成，覆盖五种画布、十套预设、四种背景纹理。
+40 张基础成品，全部由 `pixellogo` 一条命令生成，覆盖五种画布、十套预设、四种背景纹理。
 前半部分是不同语言与工具的标识卡；后半部分是日语 / 韩语 / 繁体中文的在地文化示例，文案取自当地辨识度高的作品、人物与地点。
 每张图下方标注**生成它的完整命令**，可直接复制运行。
+
+另有一组 **12 张小红书风格封面**（3:4 竖版，生活方式 / 好物分享 / 穿搭 / 美食 / 旅行打卡），
+见下文「小红书风格封面」一节；整批配置在
+[`examples/xhs-gallery.jsonc`](../examples/xhs-gallery.jsonc)，一条命令即可重跑。
+
+> 想在浏览器里翻着看：打开 **[gallery.html](gallery.html)** —— 52 张图按分类筛选、懒加载、点击放大预览。
 
 > 图片均以 `-f png` 输出到 `docs/images/gallery/`；想换格式把 `-f png` 改成 `svg` 或 `both` 即可。
 > 多语言小节需要先下载对应字形字体，命令见各小节开头。
@@ -54,7 +60,186 @@
 | 39 | 蘭亭 | `poster` | `paper` | `none` | `zh-hant` |
 | 40 | 香港 | `banner` | `ocean` | `scanlines` | `zh-hant` |
 
+> 上表为 01–40 的基础示例；**41–52** 是下一节的小红书风格封面，按内容分类单独列表。
+
 覆盖情况：**5/5** 画布 · **10/10** 预设 · **4/4** 纹理（`dots`、`grid`、`none`、`scanlines`） · **3** 种语言字形（`ja`、`ko`、`zh-hant`）。
+
+## 小红书风格封面（`poster`，1080×1440 · 3:4）
+
+12 张一组，按小红书的内容分类组织：**生活方式**、**好物分享**、**穿搭**、**美食**、**旅行打卡**。
+共同点是小红书封面的三个特征：3:4 竖版、单张只有一个 2–3 字的主视觉大字、下方留白处放一句附和文案与话题标签。
+配色全部取自生活场景（糖果粉、纸本米、奶油陶土、日落橙、海蓝、森林绿），刻意避开 `arcade` / `cyber` 这类偏技术的深色霓虹。
+
+```bash
+# 整批生成（配置里已写好每张的 out，文件名固定）
+pixellogo -c examples/xhs-gallery.jsonc -f png
+
+# 想同时要矢量版
+pixellogo -c examples/xhs-gallery.jsonc -f both
+```
+
+| # | 主题 | 分类 | 预设 | 纹理 | 话题 |
+| --- | --- | --- | --- | --- | --- |
+| 01 | 慢生活 | 生活方式 | `candy` | `dots` | #生活方式 #松弛感 |
+| 02 | 早起 | 生活方式 | `paper` | `grid` | #生活方式 #晨间 |
+| 03 | 断舍离 | 生活方式 | `minimal` | `none` | #生活方式 #整理收纳 |
+| 04 | 好物 | 好物分享 | `sunset` | `dots` | #好物分享 #平价好物 |
+| 05 | 桌面 | 好物分享 | `ocean` | `grid` | #好物分享 #桌面改造 |
+| 06 | 平价 | 好物分享 | `paper` + 暖陶覆盖 | `dots` | #好物分享 #居家好物 |
+| 07 | 通勤 | 穿搭 | `noir` | `none` | #穿搭 #通勤穿搭 |
+| 08 | 秋日 | 穿搭 | `forest` | `scanlines` | #穿搭 #秋日穿搭 |
+| 09 | 早饭 | 美食 | `candy` | `dots` | #美食 #早饭打卡 |
+| 10 | 咖啡 | 美食 | `paper` | `grid` | #美食 #咖啡日常 |
+| 11 | 出发 | 旅行打卡 | `ocean` | `scanlines` | #旅行打卡 #周边游 |
+| 12 | 海边 | 旅行打卡 | `sunset` | `none` | #旅行打卡 #海边日落 |
+
+> 全部 12 张均可点击放大查看：[gallery.html](gallery.html)（支持按分类筛选、键盘 ← → 翻页、下载原图）。
+
+### 慢生活 · 糖果粉 + 点阵，三个字撑满竖版
+
+<img src="images/gallery/xhs-01-slow-life.png" width="480" alt="慢生活">
+
+```bash
+pixellogo -e "LIFESTYLE / 01" -t 慢生活 -s 把日子过成 -s 自己喜欢的样子 -d "#生活方式 #松弛感" \
+--badge 收藏 -m poster -p candy --bg-pattern dots --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-01-slow-life.png
+```
+
+画布 `poster` · 预设 `candy` · 纹理 `dots` · 分类 生活方式
+
+### 早起 · 纸本方格像手账本，时间做徽标
+
+<img src="images/gallery/xhs-02-early-rising.png" width="480" alt="早起">
+
+```bash
+pixellogo -e "LIFESTYLE / 02" -t 早起 -s 六点的城市 -s 只属于我 -d "#生活方式 #晨间" \
+--badge "05:40" -m poster -p paper --bg-pattern grid --divider dash --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-02-early-rising.png
+```
+
+画布 `poster` · 预设 `paper` · 纹理 `grid` · 分类 生活方式
+
+### 断舍离 · 极简白底 + 块状分隔线
+
+<img src="images/gallery/xhs-03-declutter.png" width="480" alt="断舍离">
+
+```bash
+pixellogo -e "LIFESTYLE / 03" -t 断舍离 -s 扔掉一半 -s 留下心动 -d "#生活方式 #整理收纳" \
+--badge 01 -m poster -p minimal --divider block --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-03-declutter.png
+```
+
+画布 `poster` · 预设 `minimal` · 分类 生活方式
+
+### 好物 · 深色底是这一组里唯一的高对比封面
+
+<img src="images/gallery/xhs-04-good-finds.png" width="480" alt="好物">
+
+```bash
+pixellogo -e "GOOD FINDS / 04" -t 好物 -s 今年回购三次 -s 的六件小东西 -d "#好物分享 #平价好物" \
+--badge 618 -m poster -p sunset --bg-pattern dots --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-04-good-finds.png
+```
+
+画布 `poster` · 预设 `sunset` · 纹理 `dots` · 分类 好物分享
+
+### 桌面 · 海蓝方格对应桌面改造的整洁感
+
+<img src="images/gallery/xhs-05-desk-setup.png" width="480" alt="桌面">
+
+```bash
+pixellogo -e "GOOD FINDS / 05" -t 桌面 -s 改造后 -s 效率翻倍 -d "#好物分享 #桌面改造" \
+--badge v2 -m poster -p ocean --bg-pattern grid --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-05-desk-setup.png
+```
+
+画布 `poster` · 预设 `ocean` · 纹理 `grid` · 分类 好物分享
+
+### 平价 · 在 paper 上压一层暖陶色，避免与米色封面撞色
+
+<img src="images/gallery/xhs-06-budget-finds.png" width="480" alt="平价">
+
+```bash
+pixellogo -e "GOOD FINDS / 06" -t 平价 -s 不到百元 -s 提升幸福感 -d "#好物分享 #居家好物" \
+--badge "¥99" -m poster -p paper --bg-pattern dots --divider dash --shadow-offset 0 \
+--bg "#FBEFE4" --primary "#B85C38" --accent "#E9A23B" -f png \
+-o docs/images/gallery/xhs-06-budget-finds.png
+```
+
+画布 `poster` · 预设 `paper` + 单色覆盖 · 纹理 `dots` · 分类 好物分享
+
+### 通勤 · 黑白纪实配色，像穿搭号的排版
+
+<img src="images/gallery/xhs-07-commute-ootd.png" width="480" alt="通勤">
+
+```bash
+pixellogo -e "OOTD / 07" -t 通勤 -s 五分钟出门 -s 也能很好看 -d "#穿搭 #通勤穿搭" \
+--badge OOTD -m poster -p noir --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-07-commute-ootd.png
+```
+
+画布 `poster` · 预设 `noir` · 分类 穿搭
+
+### 秋日 · 森林绿 + 扫描线，做出针织纹理的暗示
+
+<img src="images/gallery/xhs-08-autumn-ootd.png" width="480" alt="秋日">
+
+```bash
+pixellogo -e "OOTD / 08" -t 秋日 -s 一件外套 -s 撑起整个秋天 -d "#穿搭 #秋日穿搭" \
+--badge AW -m poster -p forest --bg-pattern scanlines --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-08-autumn-ootd.png
+```
+
+画布 `poster` · 预设 `forest` · 纹理 `scanlines` · 分类 穿搭
+
+### 早饭 · 糖果粉 + 点阵，最“小红书”的一张
+
+<img src="images/gallery/xhs-09-breakfast.png" width="480" alt="早饭">
+
+```bash
+pixellogo -e "FOOD / 09" -t 早饭 -s 十分钟 -s 吃好一点 -d "#美食 #早饭打卡" \
+--badge "07:30" -m poster -p candy --bg-pattern dots --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-09-breakfast.png
+```
+
+画布 `poster` · 预设 `candy` · 纹理 `dots` · 分类 美食
+
+### 咖啡 · 纸本方格 + RECIPE 徽标
+
+<img src="images/gallery/xhs-10-coffee.png" width="480" alt="咖啡">
+
+```bash
+pixellogo -e "FOOD / 10" -t 咖啡 -s 在家复刻 -s 街角那杯 -d "#美食 #咖啡日常" \
+--badge RECIPE -m poster -p paper --bg-pattern grid --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-10-coffee.png
+```
+
+画布 `poster` · 预设 `paper` · 纹理 `grid` · 分类 美食
+
+### 出发 · 海蓝扫描线，48 小时倒计时做徽标
+
+<img src="images/gallery/xhs-11-weekend-trip.png" width="480" alt="出发">
+
+```bash
+pixellogo -e "TRAVEL / 11" -t 出发 -s 周末两天 -s 逃离城市 -d "#旅行打卡 #周边游" \
+--badge 48H -m poster -p ocean --bg-pattern scanlines --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-11-weekend-trip.png
+```
+
+画布 `poster` · 预设 `ocean` · 纹理 `scanlines` · 分类 旅行打卡
+
+### 海边 · 日落配色，18:40 是日落时间
+
+<img src="images/gallery/xhs-12-seaside.png" width="480" alt="海边">
+
+```bash
+pixellogo -e "TRAVEL / 12" -t 海边 -s 风很大 -s 心很静 -d "#旅行打卡 #海边日落" \
+--badge "18:40" -m poster -p sunset --divider dash --shadow-offset 0 -f png \
+-o docs/images/gallery/xhs-12-seaside.png
+```
+
+画布 `poster` · 预设 `sunset` · 分类 旅行打卡
+
 
 ## 竖版海报（`poster`，1080×1440 · 3:4）
 

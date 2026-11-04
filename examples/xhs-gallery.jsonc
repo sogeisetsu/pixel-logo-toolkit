@@ -1,0 +1,153 @@
+// examples/xhs-gallery.jsonc
+//
+// 小红书风格封面批次：12 张 3:4 竖版图，覆盖生活方式 / 好物分享 / 穿搭 / 美食 / 旅行打卡。
+//
+//   pixellogo -c examples/xhs-gallery.jsonc
+//
+// 每一项都自带 out，因此可以直接落到画廊目录、用稳定的 ASCII 文件名。
+// 想换风格只需改 preset / layout.pattern；想批量转 SVG 加 -f both 即可。
+[
+  // ---------- 生活方式 ----------
+  {
+    "mode": "poster",
+    "preset": "candy",
+    "eyebrow": "LIFESTYLE / 01",
+    "title": "慢生活",
+    "subtitle": ["把日子过成", "自己喜欢的样子"],
+    "desc": ["#生活方式 #松弛感"],
+    "badge": "收藏",
+    "layout": { "pattern": "dots", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-01-slow-life.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "paper",
+    "eyebrow": "LIFESTYLE / 02",
+    "title": "早起",
+    "subtitle": ["六点的城市", "只属于我"],
+    "desc": ["#生活方式 #晨间"],
+    "badge": "05:40",
+    "layout": { "pattern": "grid", "divider": "dash", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-02-early-rising.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "minimal",
+    "eyebrow": "LIFESTYLE / 03",
+    "title": "断舍离",
+    "subtitle": ["扔掉一半", "留下心动"],
+    "desc": ["#生活方式 #整理收纳"],
+    "badge": "01",
+    "layout": { "pattern": "none", "divider": "block", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-03-declutter.png",
+  },
+
+  // ---------- 好物分享 ----------
+  {
+    "mode": "poster",
+    "preset": "sunset",
+    "eyebrow": "GOOD FINDS / 04",
+    "title": "好物",
+    "subtitle": ["今年回购三次", "的六件小东西"],
+    "desc": ["#好物分享 #平价好物"],
+    "badge": "618",
+    "layout": { "pattern": "dots", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-04-good-finds.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "ocean",
+    "eyebrow": "GOOD FINDS / 05",
+    "title": "桌面",
+    "subtitle": ["改造后", "效率翻倍"],
+    "desc": ["#好物分享 #桌面改造"],
+    "badge": "v2",
+    "layout": { "pattern": "grid", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-05-desk-setup.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "paper",
+    "eyebrow": "GOOD FINDS / 06",
+    "title": "平价",
+    "subtitle": ["不到百元", "提升幸福感"],
+    "desc": ["#好物分享 #居家好物"],
+    "badge": "¥99",
+    // 在 paper 之上压一层暖陶色，避免三张米色封面在网格里撞色
+    "colors": { "bg": "#FBEFE4", "primary": "#B85C38", "accent": "#E9A23B" },
+    "layout": { "pattern": "dots", "divider": "dash", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-06-budget-finds.png",
+  },
+
+  // ---------- 穿搭 ----------
+  {
+    "mode": "poster",
+    "preset": "noir",
+    "eyebrow": "OOTD / 07",
+    "title": "通勤",
+    "subtitle": ["五分钟出门", "也能很好看"],
+    "desc": ["#穿搭 #通勤穿搭"],
+    "badge": "OOTD",
+    "layout": { "pattern": "none", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-07-commute-ootd.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "forest",
+    "eyebrow": "OOTD / 08",
+    "title": "秋日",
+    "subtitle": ["一件外套", "撑起整个秋天"],
+    "desc": ["#穿搭 #秋日穿搭"],
+    "badge": "AW",
+    "layout": { "pattern": "scanlines", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-08-autumn-ootd.png",
+  },
+
+  // ---------- 美食 ----------
+  {
+    "mode": "poster",
+    "preset": "candy",
+    "eyebrow": "FOOD / 09",
+    "title": "早饭",
+    "subtitle": ["十分钟", "吃好一点"],
+    "desc": ["#美食 #早饭打卡"],
+    "badge": "07:30",
+    "layout": { "pattern": "dots", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-09-breakfast.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "paper",
+    "eyebrow": "FOOD / 10",
+    "title": "咖啡",
+    "subtitle": ["在家复刻", "街角那杯"],
+    "desc": ["#美食 #咖啡日常"],
+    "badge": "RECIPE",
+    "layout": { "pattern": "grid", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-10-coffee.png",
+  },
+
+  // ---------- 旅行打卡 ----------
+  {
+    "mode": "poster",
+    "preset": "ocean",
+    "eyebrow": "TRAVEL / 11",
+    "title": "出发",
+    "subtitle": ["周末两天", "逃离城市"],
+    "desc": ["#旅行打卡 #周边游"],
+    "badge": "48H",
+    "layout": { "pattern": "scanlines", "divider": "line", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-11-weekend-trip.png",
+  },
+  {
+    "mode": "poster",
+    "preset": "sunset",
+    "eyebrow": "TRAVEL / 12",
+    "title": "海边",
+    "subtitle": ["风很大", "心很静"],
+    "desc": ["#旅行打卡 #海边日落"],
+    "badge": "18:40",
+    "layout": { "pattern": "none", "divider": "dash", "shadowOffset": 0 },
+    "out": "docs/images/gallery/xhs-12-seaside.png",
+  },
+]
