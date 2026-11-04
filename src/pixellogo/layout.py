@@ -146,6 +146,16 @@ class _Stack:
         self.cursor += max(1, int(round(mask.line_height * self.leading)))
 
 
+def _block_side(thickness: int) -> int:
+    """方块分隔线的边长；比线宽大得多，排版时必须按它预留高度。"""
+    return max(thickness * 4, 10)
+
+
+def _divider_height(thickness: int, style: str) -> int:
+    """分隔线占用的垂直高度。line / dash 只有线宽，block 是一整块方阵。"""
+    return _block_side(thickness) if style == "block" else thickness
+
+
 def _draw_divider(scene: Scene, x: int, y: int, width: int, thickness: int,
                   color: str, style: str) -> None:
     if width <= 0 or thickness <= 0 or style == "none":
@@ -159,11 +169,19 @@ def _draw_divider(scene: Scene, x: int, y: int, width: int, thickness: int,
             cursor += step
         return
     if style == "block":
-        block = max(thickness * 4, 10)
+        block = _block_side(thickness)
+        gap = max(thickness * 2, 6)
+        # 只放完整的方块，余下的像素平摊进间隙：既不出半块，也不越过右边界
+        count = (width + gap) // (block + gap)
+        if count <= 1:
+            side = min(block, width)
+            scene.add(Rect(x, y, side, side, color))
+            return
+        step = block + gap + (width - count * block) // (count - 1)
         cursor = x
-        while cursor < x + width:
-            scene.add(Rect(cursor, y, min(block, x + width - cursor), block, color))
-            cursor += block + max(thickness * 2, 6)
+        for _ in range(count):
+            scene.add(Rect(cursor, y, block, block, color))
+            cursor += step
         return
     scene.add(Rect(x, y, width, thickness, color))
     cap = max(6, thickness * 3)
@@ -355,7 +373,7 @@ def build_scene(design: Design, diagnostics: list[str] | None = None) -> Scene:
         if divider != "none":
             stack.gap(max(6, int((sub_size if sub_masks else title_size) * 0.6)))
             divider_at = stack.cursor
-            stack.gap(thickness)
+            stack.gap(_divider_height(thickness, divider))
             stack.gap(max(6, int(body_size * 0.8)))
 
         for mask in (m for m in (textlib.line_mask(line, body_size, body_chain,
@@ -370,9 +388,13 @@ def build_scene(design: Design, diagnostics: list[str] | None = None) -> Scene:
                     default=0)
         extent = total
         if divider_at is not None:
-            # 分隔线两端的方块会伸出行高之外，判定溢出时要把它算进去
-            cap = max(6, thickness * 3)
-            extent = max(extent, divider_at - cap // 2 + thickness // 2 + cap)
+            if divider == "block":
+                # 方块分隔线是一整个方块高，不能按线宽估算
+                extent = max(extent, divider_at + _block_side(thickness))
+            else:
+                # 分隔线两端的方块会伸出行高之外，判定溢出时要把它算进去
+                cap = max(6, thickness * 3)
+                extent = max(extent, divider_at - cap // 2 + thickness // 2 + cap)
         return stack, total, divider_at, extent
 
     # 垂直放不下时缩小副标题与说明的字号，再重新折行重排：

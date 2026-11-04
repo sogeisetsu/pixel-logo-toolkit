@@ -12,6 +12,9 @@ dist/
 # 生成产物（默认输出目录，CI/本地重新生成即可）
 out/
 
+# 画廊页面的数据文件：由 tools/gallery_site.py 从 docs/gallery.md 编译
+docs/gallery-data.js
+
 # 本地工具状态
 .workbuddy/
 

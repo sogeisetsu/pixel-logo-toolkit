@@ -33,8 +33,8 @@
   - [Python API](#python-api)
   - [辅助开关与退出码](#辅助开关与退出码)
 - [预设画廊](#预设画廊)
-- [命令示例画廊](docs/gallery.md) — 52 张成品与逐条命令
-- [可浏览画廊](docs/gallery.html) — 同一批图的可视化页面：分类筛选、懒加载、点击放大
+- [命令示例画廊](docs/gallery.md) — 58 张成品与逐条命令
+- [可浏览画廊](https://sogeisetsu.github.io/pixel-logo-toolkit/) — 同一批图的可视化页面：中英切换、深浅色、分类筛选、懒加载、一键复制命令
 - [文档](#文档) — 文件架构与完整的命令行手册
 - [开发与测试](#开发与测试)
 - [常见问题](#常见问题)
@@ -109,8 +109,8 @@ REA-poster.png  REA-poster.svg
 
 不带任何参数运行 `pixellogo` 会直接打印帮助；`pixellogo --help`、`pixellogo -h`、`pixellogo help` 等价。
 
-更多场景（不同语言、不同画布、不同纹理，共 52 张成品与对应命令）见 [命令示例画廊](docs/gallery.md)；
-想直接在浏览器里翻，打开 [可浏览画廊](docs/gallery.html)。
+更多场景（不同语言、不同画布、不同纹理，共 58 张成品与对应命令）见 [命令示例画廊](docs/gallery.md)；
+想直接在浏览器里翻，打开 [可浏览画廊](https://sogeisetsu.github.io/pixel-logo-toolkit/)。
 
 ---
 
@@ -554,9 +554,15 @@ render(
 </table>
 
 想看完整用法组合——不同画布 × 预设 × 背景纹理，以及日语 / 韩语 / 繁体中文的在地文化示例，
-共 52 张成品与逐条命令：**[命令示例画廊 →](docs/gallery.md)**
+共 58 张成品与逐条命令：**[命令示例画廊 →](docs/gallery.md)**
 
-想直接看图：**[可浏览画廊 →](docs/gallery.html)**（分类筛选、懒加载、点击放大、← → 翻页）。
+想直接看图：**[可浏览画廊 →](https://sogeisetsu.github.io/pixel-logo-toolkit/)**。它就是 GitHub Pages 首页：分类筛选、懒加载瀑布流、
+默认英文（可一键切中文）、深浅色切换、键盘可用的灯箱，每张卡片带**复制命令**按钮——
+粘到终端跑一遍，得到的就是同一张图。
+
+页面是生成出来的，不要手改：`docs/gallery.md` 是唯一数据源，
+`python tools/gallery_site.py` 把它编译成 `docs/gallery-data.js`（CI 部署前会跑同一条命令）。
+新增图片只要复制一个 `###` 小节，改掉图片路径与命令再推送即可。
 
 ---
 

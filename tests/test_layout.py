@@ -96,6 +96,28 @@ class TestLayout(unittest.TestCase):
         scene = make(divider="none", subtitle=["S"], desc=["D"])
         self.assertNotIn("#FF6104", scene.colors)
 
+    def test_block_divider_keeps_its_band(self):
+        """方块分隔线比线宽高得多，必须按方块高度留白，不能压到正文。"""
+        preset = presets.get_preset("minimal")
+        scene = make(preset_key="minimal", divider="block",
+                     subtitle=["扔掉一半"], desc=["#生活方式 #整理收纳"])
+        blocks = [r for r in scene.rects if r.fill == preset.accent and r.w == r.h and r.w >= 20]
+        self.assertGreaterEqual(len(blocks), 2)
+        # 所有方块边长一致：右边界放不下时会收掉整块，而不是留半块
+        self.assertEqual(len({r.w for r in blocks}), 1)
+        block_bottom = max(r.y + r.h for r in blocks)
+        below = [r for r in scene.rects
+                 if r.fill == preset.fg and r.y > blocks[0].y]
+        self.assertTrue(below, "正文应当排在分隔线下方")
+        self.assertGreaterEqual(min(r.y for r in below), block_bottom)
+
+    def test_block_divider_fits_between_margins(self):
+        preset = presets.get_preset("minimal")
+        scene = make(preset_key="minimal", divider="block", subtitle=["A"], desc=["B"])
+        blocks = [r for r in scene.rects if r.fill == preset.accent and r.w == r.h and r.w >= 20]
+        self.assertLessEqual(max(r.x + r.w for r in blocks), scene.width)
+        self.assertGreaterEqual(min(r.x for r in blocks), 0)
+
     def test_center_alignment(self):
         left = make(align="left", subtitle=["SHORT"])
         center = make(align="center", subtitle=["SHORT"])

@@ -34,8 +34,8 @@ Latin / Chinese / Japanese / Korean text without missing glyphs.
   - [Python API](#python-api)
   - [Flags and exit codes](#flags-and-exit-codes)
 - [Preset gallery](#preset-gallery)
-- [Command gallery](docs/gallery.md) — 52 rendered samples with the exact commands
-- [Browsable gallery](docs/gallery.html) — the same set as a filterable, lazy-loaded page with a lightbox
+- [Command gallery](docs/gallery.md) — 58 rendered samples with the exact commands
+- [Browsable gallery](https://sogeisetsu.github.io/pixel-logo-toolkit/) — the same set as a filterable, bilingual, light/dark page with copyable commands
 - [Documentation](#documentation)
 - [Development and tests](#development-and-tests)
 - [FAQ](#faq)
@@ -119,9 +119,9 @@ REA-poster.png  REA-poster.svg
 Running `pixellogo` with no arguments prints the help page; `pixellogo --help`,
 `pixellogo -h` and `pixellogo help` are equivalent.
 
-More scenarios — different languages, canvases and textures, 52 rendered samples with their
+More scenarios — different languages, canvases and textures, 58 rendered samples with their
 commands — live in the [command gallery](docs/gallery.md) (currently in Chinese). To browse them
-as a page instead, open the **[browsable gallery](docs/gallery.html)**.
+as a page instead, open the **[browsable gallery](https://sogeisetsu.github.io/pixel-logo-toolkit/)**.
 
 ---
 
@@ -587,10 +587,18 @@ Exit codes: `0` success, `2` invalid arguments or configuration (error text goes
 
 For the full set of combinations — canvases × presets × textures, plus localized Japanese /
 Korean / Traditional Chinese examples — see the
-**[command gallery →](docs/gallery.md)** (52 samples, each with its exact command;
-currently written in Chinese). Prefer clicking through them? The
-**[browsable gallery](docs/gallery.html)** renders the same set with category filters,
-lazy loading and a keyboard-navigable lightbox.
+**[command gallery →](docs/gallery.md)** (58 samples, each with its exact command;
+currently written in Chinese).
+
+Prefer clicking through them? The **[browsable gallery](https://sogeisetsu.github.io/pixel-logo-toolkit/)** is the GitHub Pages
+homepage: category filters, a lazy-loaded masonry grid, English by default with a one-click
+Chinese switch, a light/dark toggle, a keyboard-navigable lightbox, and a **copy command**
+button on every card — paste it into a terminal and you get the same PNG back.
+
+The page is generated, never hand-edited: `docs/gallery.md` is the single source, and
+`python tools/gallery_site.py` compiles it into `docs/gallery-data.js` (the CI runs the same
+command before deploying). To add an image, copy one `###` block in the markdown, point it at
+a new PNG and its command, and push.
 
 ---
 
